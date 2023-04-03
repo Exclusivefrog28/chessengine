@@ -1,0 +1,4 @@
+C:\Users\excf28\AppData\Local\JetBrains\Toolbox\apps\CLion\ch-0\231.8109.174\bin\cmake\win\x64\bin\cmake.exe -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_MAKE_PROGRAM=C:/Users/excf28/AppData/Local/JetBrains/Toolbox/apps/CLion/ch-0/231.8109.174/bin/ninja/win/x64/ninja.exe -DCMAKE_C_COMPILER=A:/dev/emsdk-main/upstream/emscripten/emcc.bat -DCMAKE_CXX_COMPILER=A:/dev/emsdk-main/upstream/emscripten/em++.bat -DCMAKE_TOOLCHAIN_FILE=A:/dev/emsdk-main/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake -DCMAKE_CROSSCOMPILING_EMULATOR=A:\dev\emsdk-main\node\14.18.2_64bit\bin\node.exe -G Ninja -S A:\dev\ChessEngine -B A:\dev\ChessEngine\cmake-build-webassembly
+-- Configuring done
+-- Generating done
+-- Build files have been written to: A:/dev/ChessEngine/cmake-build-webassembly

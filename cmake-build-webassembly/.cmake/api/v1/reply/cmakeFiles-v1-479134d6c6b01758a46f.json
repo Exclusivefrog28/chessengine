@@ -1,0 +1,206 @@
+{
+	"inputs" : 
+	[
+		{
+			"path" : "CMakeLists.txt"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "C:/Users/excf28/AppData/Local/JetBrains/Toolbox/apps/CLion/ch-0/231.8109.174/bin/cmake/win/x64/share/cmake-3.25/Modules/CMakeDetermineSystem.cmake"
+		},
+		{
+			"isExternal" : true,
+			"path" : "A:/dev/emsdk-main/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "C:/Users/excf28/AppData/Local/JetBrains/Toolbox/apps/CLion/ch-0/231.8109.174/bin/cmake/win/x64/share/cmake-3.25/Modules/CMakeSystem.cmake.in"
+		},
+		{
+			"isGenerated" : true,
+			"path" : "cmake-build-webassembly/CMakeFiles/3.25.2/CMakeSystem.cmake"
+		},
+		{
+			"isExternal" : true,
+			"path" : "A:/dev/emsdk-main/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "C:/Users/excf28/AppData/Local/JetBrains/Toolbox/apps/CLion/ch-0/231.8109.174/bin/cmake/win/x64/share/cmake-3.25/Modules/CMakeSystemSpecificInitialize.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "C:/Users/excf28/AppData/Local/JetBrains/Toolbox/apps/CLion/ch-0/231.8109.174/bin/cmake/win/x64/share/cmake-3.25/Modules/CMakeDetermineCCompiler.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "C:/Users/excf28/AppData/Local/JetBrains/Toolbox/apps/CLion/ch-0/231.8109.174/bin/cmake/win/x64/share/cmake-3.25/Modules/CMakeDetermineCompiler.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "C:/Users/excf28/AppData/Local/JetBrains/Toolbox/apps/CLion/ch-0/231.8109.174/bin/cmake/win/x64/share/cmake-3.25/Modules/CMakeFindBinUtils.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "C:/Users/excf28/AppData/Local/JetBrains/Toolbox/apps/CLion/ch-0/231.8109.174/bin/cmake/win/x64/share/cmake-3.25/Modules/Compiler/Clang-FindBinUtils.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "C:/Users/excf28/AppData/Local/JetBrains/Toolbox/apps/CLion/ch-0/231.8109.174/bin/cmake/win/x64/share/cmake-3.25/Modules/CMakeCCompiler.cmake.in"
+		},
+		{
+			"isGenerated" : true,
+			"path" : "cmake-build-webassembly/CMakeFiles/3.25.2/CMakeCCompiler.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "C:/Users/excf28/AppData/Local/JetBrains/Toolbox/apps/CLion/ch-0/231.8109.174/bin/cmake/win/x64/share/cmake-3.25/Modules/CMakeDetermineCXXCompiler.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "C:/Users/excf28/AppData/Local/JetBrains/Toolbox/apps/CLion/ch-0/231.8109.174/bin/cmake/win/x64/share/cmake-3.25/Modules/CMakeDetermineCompiler.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "C:/Users/excf28/AppData/Local/JetBrains/Toolbox/apps/CLion/ch-0/231.8109.174/bin/cmake/win/x64/share/cmake-3.25/Modules/CMakeFindBinUtils.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "C:/Users/excf28/AppData/Local/JetBrains/Toolbox/apps/CLion/ch-0/231.8109.174/bin/cmake/win/x64/share/cmake-3.25/Modules/Compiler/Clang-FindBinUtils.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "C:/Users/excf28/AppData/Local/JetBrains/Toolbox/apps/CLion/ch-0/231.8109.174/bin/cmake/win/x64/share/cmake-3.25/Modules/CMakeCXXCompiler.cmake.in"
+		},
+		{
+			"isGenerated" : true,
+			"path" : "cmake-build-webassembly/CMakeFiles/3.25.2/CMakeCXXCompiler.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "C:/Users/excf28/AppData/Local/JetBrains/Toolbox/apps/CLion/ch-0/231.8109.174/bin/cmake/win/x64/share/cmake-3.25/Modules/CMakeSystemSpecificInformation.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "C:/Users/excf28/AppData/Local/JetBrains/Toolbox/apps/CLion/ch-0/231.8109.174/bin/cmake/win/x64/share/cmake-3.25/Modules/CMakeGenericSystem.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "C:/Users/excf28/AppData/Local/JetBrains/Toolbox/apps/CLion/ch-0/231.8109.174/bin/cmake/win/x64/share/cmake-3.25/Modules/CMakeInitializeConfigs.cmake"
+		},
+		{
+			"isExternal" : true,
+			"path" : "A:/dev/emsdk-main/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "C:/Users/excf28/AppData/Local/JetBrains/Toolbox/apps/CLion/ch-0/231.8109.174/bin/cmake/win/x64/share/cmake-3.25/Modules/CMakeCInformation.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "C:/Users/excf28/AppData/Local/JetBrains/Toolbox/apps/CLion/ch-0/231.8109.174/bin/cmake/win/x64/share/cmake-3.25/Modules/CMakeLanguageInformation.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "C:/Users/excf28/AppData/Local/JetBrains/Toolbox/apps/CLion/ch-0/231.8109.174/bin/cmake/win/x64/share/cmake-3.25/Modules/Compiler/Clang-C.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "C:/Users/excf28/AppData/Local/JetBrains/Toolbox/apps/CLion/ch-0/231.8109.174/bin/cmake/win/x64/share/cmake-3.25/Modules/Compiler/Clang.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "C:/Users/excf28/AppData/Local/JetBrains/Toolbox/apps/CLion/ch-0/231.8109.174/bin/cmake/win/x64/share/cmake-3.25/Modules/Compiler/CMakeCommonCompilerMacros.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "C:/Users/excf28/AppData/Local/JetBrains/Toolbox/apps/CLion/ch-0/231.8109.174/bin/cmake/win/x64/share/cmake-3.25/Modules/Compiler/GNU.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "C:/Users/excf28/AppData/Local/JetBrains/Toolbox/apps/CLion/ch-0/231.8109.174/bin/cmake/win/x64/share/cmake-3.25/Modules/Compiler/CMakeCommonCompilerMacros.cmake"
+		},
+		{
+			"isExternal" : true,
+			"path" : "A:/dev/emsdk-main/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "C:/Users/excf28/AppData/Local/JetBrains/Toolbox/apps/CLion/ch-0/231.8109.174/bin/cmake/win/x64/share/cmake-3.25/Modules/CMakeCommonLanguageInclude.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "C:/Users/excf28/AppData/Local/JetBrains/Toolbox/apps/CLion/ch-0/231.8109.174/bin/cmake/win/x64/share/cmake-3.25/Modules/CMakeTestCCompiler.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "C:/Users/excf28/AppData/Local/JetBrains/Toolbox/apps/CLion/ch-0/231.8109.174/bin/cmake/win/x64/share/cmake-3.25/Modules/CMakeCXXInformation.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "C:/Users/excf28/AppData/Local/JetBrains/Toolbox/apps/CLion/ch-0/231.8109.174/bin/cmake/win/x64/share/cmake-3.25/Modules/CMakeLanguageInformation.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "C:/Users/excf28/AppData/Local/JetBrains/Toolbox/apps/CLion/ch-0/231.8109.174/bin/cmake/win/x64/share/cmake-3.25/Modules/Compiler/Clang-CXX.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "C:/Users/excf28/AppData/Local/JetBrains/Toolbox/apps/CLion/ch-0/231.8109.174/bin/cmake/win/x64/share/cmake-3.25/Modules/Compiler/Clang.cmake"
+		},
+		{
+			"isExternal" : true,
+			"path" : "A:/dev/emsdk-main/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "C:/Users/excf28/AppData/Local/JetBrains/Toolbox/apps/CLion/ch-0/231.8109.174/bin/cmake/win/x64/share/cmake-3.25/Modules/CMakeCommonLanguageInclude.cmake"
+		},
+		{
+			"isCMake" : true,
+			"isExternal" : true,
+			"path" : "C:/Users/excf28/AppData/Local/JetBrains/Toolbox/apps/CLion/ch-0/231.8109.174/bin/cmake/win/x64/share/cmake-3.25/Modules/CMakeTestCXXCompiler.cmake"
+		}
+	],
+	"kind" : "cmakeFiles",
+	"paths" : 
+	{
+		"build" : "A:/dev/ChessEngine/cmake-build-webassembly",
+		"source" : "A:/dev/ChessEngine"
+	},
+	"version" : 
+	{
+		"major" : 1,
+		"minor" : 0
+	}
+}
