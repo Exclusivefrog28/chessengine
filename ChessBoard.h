@@ -33,11 +33,22 @@ public:
         short position;
     };
 
+    struct CastlingRights {
+        bool blackShort;
+        bool blackLong;
+        bool whiteShort;
+        bool whiteLong;
+    };
+
 
     Square squares [64]{};
 
     std::vector<Piece> whitePieces;
     std::vector<Piece> blackPieces;
+
+    PieceColor sideToMove = WHITE;
+    CastlingRights castlingRights{};
+    short enPassantFile = 0;
 
 
     ChessBoard();

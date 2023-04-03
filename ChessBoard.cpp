@@ -51,6 +51,10 @@ void ChessBoard::setStartingPosition() {
         }
     }
 
+    sideToMove = WHITE;
+    castlingRights = {true, true, true, true};
+    enPassantFile = 0;
+
 }
 
 ChessBoard::ChessBoard() = default;
