@@ -1,4 +1,0 @@
-C:\Users\excf28\AppData\Local\JetBrains\Toolbox\apps\CLion\ch-0\231.8109.174\bin\cmake\win\x64\bin\cmake.exe -DCMAKE_BUILD_TYPE=Debug -DCMAKE_MAKE_PROGRAM=C:/Users/excf28/AppData/Local/JetBrains/Toolbox/apps/CLion/ch-0/231.8109.174/bin/ninja/win/x64/ninja.exe -G Ninja -S A:\dev\ChessEngine -B A:\dev\ChessEngine\cmake-build-debug
--- Configuring done
--- Generating done
--- Build files have been written to: A:/dev/ChessEngine/cmake-build-debug
