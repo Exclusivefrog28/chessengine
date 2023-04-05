@@ -3,33 +3,22 @@
 
 
 #include <vector>
+#include <iostream>
+#include "Move.h"
+#include "Piece.h"
 
 class ChessBoard {
 
 public:
 
-    enum PieceType {
-        EMPTY = 0,
-        PAWN = 1,
-        KNIGHT = 2,
-        BISHOP = 3,
-        ROOK = 4,
-        QUEEN = 5,
-        KING = 6
-    };
-
-    enum PieceColor {
-        WHITE = 0,
-        BLACK = 1
-    };
 
     struct Square {
-        PieceType type;
-        PieceColor color;
+        Type type;
+        Color color;
     };
 
     struct Piece {
-        PieceType type;
+        Type type;
         short position;
     };
 
@@ -41,19 +30,32 @@ public:
     };
 
 
-    Square squares [64]{};
+    Square squares[64]{};
 
     std::vector<Piece> whitePieces;
     std::vector<Piece> blackPieces;
 
-    PieceColor sideToMove = WHITE;
+    Color sideToMove = WHITE;
     CastlingRights castlingRights{};
     short enPassantFile = 0;
 
+    std::vector<Move> history;
 
     ChessBoard();
 
     void setStartingPosition();
+
+    friend std::ostream& operator<<(std::ostream& os, const ChessBoard& board);
+
+    void makeMove(Move move);
+    void unMakeMove();
+
+private:
+    static Color invertColor(Color color);
+
+    void movePiece(short start ,short end);
+    void setPiece(short position, Square piece);
+    void removePiece(short position);
 
 };
 

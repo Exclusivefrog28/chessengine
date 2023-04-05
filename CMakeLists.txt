@@ -3,4 +3,4 @@ project(ChessEngine)
 
 set(CMAKE_CXX_STANDARD 23)
 
-add_executable(ChessEngine main.cpp ChessBoard.cpp ChessBoard.h)
+add_executable(ChessEngine main.cpp ChessBoard.cpp ChessBoard.h Move.h Piece.h)
