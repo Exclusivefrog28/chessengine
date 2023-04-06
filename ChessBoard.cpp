@@ -108,7 +108,6 @@ void ChessBoard::unMakeMove() {
     Move lastMove = history[history.size() - 1];
     history.pop_back();
 
-
     if (lastMove.flag < 6) {
         movePiece(lastMove.end, lastMove.start);
 
