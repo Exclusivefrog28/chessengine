@@ -11,18 +11,15 @@ enum MoveFlag{
     CAPTUREROOK = 4,
     CAPTUREQUEEN = 5,
     ENPASSANT = 6,
-    CASTLEKINGSIDE = 7,
-    CASTLEQUEENSIDE = 8,
-    PROMOTEQUEEN = 9,
-    PROMOTEROOK = 10,
-    PROMOTEBISHOP = 11,
-    PROMOTEKNIGHT = 12
+    DOUBLEPAWNMOVE = 7,
+    CASTLEKINGSIDE = 8,
+    CASTLEQUEENSIDE = 9,
 };
-
 
 struct Move {
     short start;
     short end;
+    Type promotionType;
     MoveFlag flag;
     Color player;
 };

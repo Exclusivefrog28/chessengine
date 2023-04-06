@@ -37,9 +37,10 @@ public:
 
     Color sideToMove = WHITE;
     CastlingRights castlingRights{};
-    short enPassantFile = 0;
+    short enPassantFile = -1;
 
-    std::vector<Move> history;
+    std::vector<Move> moveHistory;
+    std::vector<CastlingRights> castlingRightHistory;
 
     ChessBoard();
 
@@ -56,6 +57,8 @@ private:
     void movePiece(short start ,short end);
     void setPiece(short position, Square piece);
     void removePiece(short position);
+
+    void updateCastlingRights(Move move);
 
 };
 

@@ -38,11 +38,11 @@ void ChessBoard::setStartingPosition() {
             }
 
             if (i < 16) {
-                squares[i].color = WHITE;
-                whitePieces.push_back({squares[i].type, i});
-            } else {
                 squares[i].color = BLACK;
                 blackPieces.push_back({squares[i].type, i});
+            } else {
+                squares[i].color = WHITE;
+                whitePieces.push_back({squares[i].type, i});
             }
 
         } else {
@@ -95,24 +95,63 @@ std::ostream &operator<<(std::ostream &os, const ChessBoard &board) {
 }
 
 void ChessBoard::makeMove(Move move) {
+    enPassantFile = -1;
 
-    if (move.flag < 6) {
+    if (move.promotionType != EMPTY) {
+        removePiece(move.start);
+        removePiece(move.end);
+        setPiece(move.end, {move.promotionType, move.player});
+    } else {
         movePiece(move.start, move.end);
+
+        if (move.flag == ENPASSANT) {
+            short passedPawnPosition = (move.player == WHITE) ? move.end + 8 : move.end - 8;
+            removePiece(passedPawnPosition);
+        } else if (move.flag == DOUBLEPAWNMOVE) {
+            short left = move.end - 1;
+            short right = move.end + 1;
+            if (squares[left].type == PAWN && squares[left].color != move.player
+                || squares[right].type == PAWN && squares[right].color != move.player) {
+                enPassantFile = enPassantFile = move.start % 8;
+            }
+        } else if (move.flag == CASTLEKINGSIDE) {
+            movePiece(move.end + 1, move.end - 1);
+        } else if (move.flag == CASTLEQUEENSIDE) {
+            movePiece(move.end - 2, move.end + 1);
+        }
     }
 
+    updateCastlingRights(move);
     sideToMove = invertColor(sideToMove);
-    history.push_back(move);
+    moveHistory.push_back(move);
+    castlingRightHistory.push_back(castlingRights);
 }
 
 void ChessBoard::unMakeMove() {
-    Move lastMove = history[history.size() - 1];
-    history.pop_back();
+    Move lastMove = moveHistory[moveHistory.size() - 1];
+    castlingRights = castlingRightHistory[castlingRightHistory.size() - 1];
+    moveHistory.pop_back();
+    castlingRightHistory.pop_back();
 
-    if (lastMove.flag < 6) {
+    enPassantFile = -1;
+
+    if (lastMove.promotionType != EMPTY) {
+        removePiece(lastMove.end);
+        setPiece(lastMove.start, {PAWN, lastMove.player});
+        if (lastMove.flag > 0) setPiece(lastMove.end, {static_cast<Type>(lastMove.flag), invertColor(lastMove.player)});
+    } else {
         movePiece(lastMove.end, lastMove.start);
 
-        if (lastMove.flag > 0) {
+        if (lastMove.flag > 0 && lastMove.flag < 6) {
             setPiece(lastMove.end, {static_cast<Type>(lastMove.flag), invertColor(lastMove.player)});
+        } else if (lastMove.flag == ENPASSANT) {
+            short passedPawnPosition = (lastMove.player == WHITE) ? lastMove.end + 8 : lastMove.end - 8;
+            setPiece(passedPawnPosition, {PAWN, invertColor(lastMove.player)});
+            enPassantFile = lastMove.end % 8;
+        } else if (lastMove.flag == CASTLEKINGSIDE) {
+            movePiece(lastMove.end - 1, lastMove.end + 1);
+        } else if (lastMove.flag == CASTLEQUEENSIDE) {
+            movePiece(lastMove.end + 1, lastMove.end - 2);
         }
     }
 
@@ -152,6 +191,34 @@ void ChessBoard::removePiece(short position) {
 Color ChessBoard::invertColor(Color color) {
     if (color == WHITE) return BLACK;
     else return WHITE;
+}
+
+void ChessBoard::updateCastlingRights(Move move) {
+    if (move.player == WHITE) {
+        if (castlingRights.whiteShort || castlingRights.whiteLong) {
+            if (move.start == 60) {
+                castlingRights.whiteShort = false;
+                castlingRights.whiteLong = false;
+            } else {
+                if (castlingRights.whiteShort && move.start == 63) castlingRights.whiteShort = false;
+                if (castlingRights.whiteLong && move.start == 56) castlingRights.whiteLong = false;
+            }
+        }
+        if (castlingRights.blackShort && move.end == 7) castlingRights.blackShort = false;
+        if (castlingRights.blackLong && move.end == 0) castlingRights.blackLong = false;
+    } else {
+        if (castlingRights.blackShort || castlingRights.blackLong) {
+            if (move.start == 4) {
+                castlingRights.blackShort = false;
+                castlingRights.blackLong = false;
+            } else {
+                if (castlingRights.blackShort && move.start == 7) castlingRights.blackShort = false;
+                if (castlingRights.blackLong && move.start == 0) castlingRights.blackLong = false;
+            }
+        }
+        if (castlingRights.whiteShort && move.end == 63) castlingRights.whiteShort = false;
+        if (castlingRights.whiteLong && move.end == 56) castlingRights.whiteLong = false;
+    }
 }
 
 ChessBoard::ChessBoard() = default;
