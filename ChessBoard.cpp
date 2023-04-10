@@ -221,4 +221,52 @@ void ChessBoard::updateCastlingRights(Move move) {
     }
 }
 
+std::string ChessBoard::fen() {
+    std::string fen = "";
+    for (int i = 0; i < 8; ++i) {
+        int emptyspaces = 0;
+        for (int j = 0; j < 8; ++j) {
+            Square square = squares[i * 8 + j];
+            if (square.type == EMPTY) {
+                emptyspaces++;
+                if (j == 7) {
+                    fen += std::to_string(emptyspaces);
+                }
+            } else {
+                if (emptyspaces > 0) fen += std::to_string(emptyspaces);
+                emptyspaces = 0;
+                std::string piece = "p";
+                switch (square.type) {
+                    case KNIGHT:
+                        piece = 'n';
+                        break;
+                    case BISHOP:
+                        piece = 'b';
+                        break;
+                    case ROOK:
+                        piece = 'r';
+                        break;
+                    case QUEEN:
+                        piece = 'q';
+                        break;
+                    case KING:
+                        piece = 'k';
+                        break;
+                }
+                if (square.color == WHITE) std::transform(piece.begin(), piece.end(), piece.begin(), ::toupper);
+                fen += piece;
+            }
+        }
+        if (i < 7) { fen += "/"; }
+    }
+    fen += " ";
+
+    if (sideToMove == WHITE) fen += "w";
+    else fen += "b";
+
+    fen += " KQkq - 0 1";
+
+    return fen;
+}
+
 ChessBoard::ChessBoard() = default;

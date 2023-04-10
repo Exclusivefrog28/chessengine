@@ -47,6 +47,7 @@ public:
     void setStartingPosition();
 
     friend std::ostream& operator<<(std::ostream& os, const ChessBoard& board);
+    std::string fen();
 
     void makeMove(Move move);
     void unMakeMove();
