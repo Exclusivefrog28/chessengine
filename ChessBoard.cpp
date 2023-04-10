@@ -2,6 +2,9 @@
 
 void ChessBoard::setStartingPosition() {
 
+    whitePieces = {};
+    blackPieces = {};
+
     for (short i = 0; i < 64; i++) {
         if (i < 16 || i >= 48) {
 
@@ -61,32 +64,9 @@ std::ostream &operator<<(std::ostream &os, const ChessBoard &board) {
 
     for (int i = 0; i < 8; ++i) {
         for (int j = 0; j < 8; ++j) {
-            int piece = board.squares[i * 8 + j].type;
-            std::string code;
-            switch (piece) {
-                case 1:
-                    code = "p";
-                    break;
-                case 2:
-                    code = "N";
-                    break;
-                case 3:
-                    code = "B";
-                    break;
-                case 4:
-                    code = "R";
-                    break;
-                case 5:
-                    code = "Q";
-                    break;
-                case 6:
-                    code = "K";
-                    break;
-                default:
-                    code = "-";
-                    break;
-            }
-            os << code << " ";
+            Type type = board.squares[i * 8 + j].type;
+            Color color = board.squares[i * 8 + j].color;
+            os << pieceToString(type, color) << " ";
         }
         os << std::endl;
     }
@@ -165,26 +145,31 @@ void ChessBoard::movePiece(short start, short end) {
 }
 
 void ChessBoard::setPiece(short position, ChessBoard::Square piece) {
-    std::vector<Piece> &pieceList = blackPieces;
     if (piece.color == WHITE) {
-        pieceList = whitePieces;
+        whitePieces.push_back({piece.type, position});
+    } else {
+        blackPieces.push_back({piece.type, position});
     }
-    pieceList.push_back({piece.type, position});
     squares[position] = piece;
 }
 
 void ChessBoard::removePiece(short position) {
-    std::vector<Piece> &pieceList = blackPieces;
     if (squares[position].color == WHITE) {
-        pieceList = whitePieces;
-    }
-    for (int i = 0; pieceList.size() > i; i++) {
-        if (pieceList[i].position == position) {
-            pieceList[i] = pieceList[pieceList.size() - 1];
-            pieceList.pop_back();
-            break;
+        for (int i = 0; whitePieces.size() > i; i++) {
+            if (whitePieces[i].position == position) {
+                whitePieces.erase(whitePieces.begin() + i);
+                break;
+            }
+        }
+    } else {
+        for (int i = 0; blackPieces.size() > i; i++) {
+            if (blackPieces[i].position == position) {
+                blackPieces.erase(blackPieces.begin() + i);
+                break;
+            }
         }
     }
+
     squares[position] = {EMPTY, WHITE};
 }
 
@@ -235,26 +220,7 @@ std::string ChessBoard::fen() {
             } else {
                 if (emptyspaces > 0) fen += std::to_string(emptyspaces);
                 emptyspaces = 0;
-                std::string piece = "p";
-                switch (square.type) {
-                    case KNIGHT:
-                        piece = 'n';
-                        break;
-                    case BISHOP:
-                        piece = 'b';
-                        break;
-                    case ROOK:
-                        piece = 'r';
-                        break;
-                    case QUEEN:
-                        piece = 'q';
-                        break;
-                    case KING:
-                        piece = 'k';
-                        break;
-                }
-                if (square.color == WHITE) std::transform(piece.begin(), piece.end(), piece.begin(), ::toupper);
-                fen += piece;
+                fen += pieceToString(square.type, square.color);
             }
         }
         if (i < 7) { fen += "/"; }

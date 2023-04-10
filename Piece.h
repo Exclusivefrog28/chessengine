@@ -16,4 +16,28 @@ enum Color {
     BLACK = 1
 };
 
+static std::string pieceToString(Type type, Color color) {
+    std::string piece = "p";
+    switch (type) {
+        case KNIGHT:
+            piece = 'n';
+            break;
+        case BISHOP:
+            piece = 'b';
+            break;
+        case ROOK:
+            piece = 'r';
+            break;
+        case QUEEN:
+            piece = 'q';
+            break;
+        case KING:
+            piece = 'k';
+            break;
+    }
+    if (color == WHITE) std::transform(piece.begin(), piece.end(), piece.begin(), ::toupper);
+    return piece;
+}
+
+
 #endif //CHESSENGINE_PIECE_H

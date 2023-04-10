@@ -35,16 +35,38 @@ char* unmove(int start, int end) {
 }
 
 EMSCRIPTEN_KEEPALIVE
+char* listPieces(){
+    std::string string = "White pieces: ";
+    for (ChessBoard::Piece &piece: board.whitePieces){
+        string += "[";
+        string += pieceToString(piece.type, WHITE);
+        string += ", ";
+        string += std::to_string(piece.position);
+        string += "] ";
+    }
+    string += "\nBlack pieces:";
+    for (ChessBoard::Piece &piece: board.blackPieces){
+        string += "[";
+        string += pieceToString(piece.type, BLACK);
+        string += ", ";
+        string += std::to_string(piece.position);
+        string += "] ";
+    }
+    string += "\n";
+
+    const int length = string.length();
+    char* chararray = new char[length + 1];
+    strcpy(chararray, string.c_str());
+    return chararray;
+}
+
+EMSCRIPTEN_KEEPALIVE
 int main() {
 
 
     board.setStartingPosition();
 
-    std::cout << board.fen() << std::endl;
-    board.makeMove({7 * 8 + 1, 5 * 8 + 2, EMPTY, QUIET, WHITE});
-    std::cout << board.fen() << std::endl;
-    board.unMakeMove();
-    std::cout << board.fen() << std::endl;
+    std::cout << listPieces() << std::endl;
 
     return 0;
 }
