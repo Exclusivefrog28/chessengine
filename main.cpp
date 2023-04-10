@@ -12,8 +12,9 @@ void init() {
     board.setStartingPosition();
 }
 EMSCRIPTEN_KEEPALIVE
-char* move(int start, int end) {
-    board.makeMove({static_cast<short>(start), static_cast<short>(end), EMPTY, QUIET, WHITE});
+char* move(int start, int end, int flag, int promotionType, int player) {
+    board.makeMove({static_cast<short>(start), static_cast<short>(end), static_cast<Type>(promotionType),
+                    static_cast<MoveFlag>(flag), static_cast<Color>(player)});
 
     std::string fen = board.fen();
     const int length = fen.length();
