@@ -7,6 +7,9 @@
 #include "Move.h"
 #include "Piece.h"
 
+using namespace Piece;
+using namespace Moves;
+
 class ChessBoard {
 
 public:
