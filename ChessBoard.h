@@ -6,6 +6,7 @@
 #include <iostream>
 #include "Move.h"
 #include "Piece.h"
+#include "Util.h"
 
 using namespace Piece;
 using namespace Moves;
@@ -40,7 +41,10 @@ public:
 
     Color sideToMove = WHITE;
     CastlingRights castlingRights{};
-    short enPassantFile = -1;
+    short enPassantSquare = -1;
+
+    int halfMoveClock = 0;
+    int fullMoveClock = 1;
 
     std::vector<Move> moveHistory;
     std::vector<CastlingRights> castlingRightHistory;

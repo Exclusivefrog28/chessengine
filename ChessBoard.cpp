@@ -56,7 +56,7 @@ void ChessBoard::setStartingPosition() {
 
     sideToMove = WHITE;
     castlingRights = {true, true, true, true};
-    enPassantFile = 0;
+    enPassantSquare = -1;
 
 }
 
@@ -66,7 +66,7 @@ std::ostream &operator<<(std::ostream &os, const ChessBoard &board) {
         for (int j = 0; j < 8; ++j) {
             Type type = board.squares[i * 8 + j].type;
             Color color = board.squares[i * 8 + j].color;
-            os << pieceToString(type, color) << " ";
+            os << Util::pieceToString(type, color) << " ";
         }
         os << std::endl;
     }
@@ -75,7 +75,12 @@ std::ostream &operator<<(std::ostream &os, const ChessBoard &board) {
 }
 
 void ChessBoard::makeMove(Move move) {
-    enPassantFile = -1;
+    enPassantSquare = -1;
+
+    if (squares[move.start].type == PAWN || (move.flag >= 1 && move.flag <= 5)) halfMoveClock = 0;
+    else halfMoveClock++;
+
+    if (move.player == BLACK) fullMoveClock++;
 
     if (move.promotionType != EMPTY) {
         removePiece(move.start);
@@ -85,14 +90,13 @@ void ChessBoard::makeMove(Move move) {
         movePiece(move.start, move.end);
 
         if (move.flag == ENPASSANT) {
-            short passedPawnPosition = (move.player == WHITE) ? move.end + 8 : move.end - 8;
-            removePiece(passedPawnPosition);
+            removePiece(enPassantSquare);
         } else if (move.flag == DOUBLEPAWNMOVE) {
             short left = move.end - 1;
             short right = move.end + 1;
             if (squares[left].type == PAWN && squares[left].color != move.player
                 || squares[right].type == PAWN && squares[right].color != move.player) {
-                enPassantFile = enPassantFile = move.start % 8;
+                enPassantSquare = move.end;
             }
         } else if (move.flag == CASTLEKINGSIDE) {
             movePiece(move.end + 1, move.end - 1);
@@ -113,7 +117,7 @@ void ChessBoard::unMakeMove() {
     moveHistory.pop_back();
     castlingRightHistory.pop_back();
 
-    enPassantFile = -1;
+    enPassantSquare = -1;
 
     if (lastMove.promotionType != EMPTY) {
         removePiece(lastMove.end);
@@ -127,7 +131,7 @@ void ChessBoard::unMakeMove() {
         } else if (lastMove.flag == ENPASSANT) {
             short passedPawnPosition = (lastMove.player == WHITE) ? lastMove.end + 8 : lastMove.end - 8;
             setPiece(passedPawnPosition, {PAWN, invertColor(lastMove.player)});
-            enPassantFile = lastMove.end % 8;
+            enPassantSquare = passedPawnPosition;
         } else if (lastMove.flag == CASTLEKINGSIDE) {
             movePiece(lastMove.end - 1, lastMove.end + 1);
         } else if (lastMove.flag == CASTLEQUEENSIDE) {
@@ -220,17 +224,31 @@ std::string ChessBoard::fen() {
             } else {
                 if (emptyspaces > 0) fen += std::to_string(emptyspaces);
                 emptyspaces = 0;
-                fen += pieceToString(square.type, square.color);
+                fen += Util::pieceToString(square.type, square.color);
             }
         }
         if (i < 7) { fen += "/"; }
     }
     fen += " ";
 
-    if (sideToMove == WHITE) fen += "w";
-    else fen += "b";
+    if (sideToMove == WHITE) fen += "w ";
+    else fen += "b ";
 
-    fen += " KQkq - 0 1";
+    std::string fenCastlingRights;
+
+    if(castlingRights.whiteShort) fenCastlingRights += "K";
+    if(castlingRights.whiteLong) fenCastlingRights += "Q";
+    if(castlingRights.blackShort) fenCastlingRights += "k";
+    if(castlingRights.blackLong) fenCastlingRights += "q";
+    if(fenCastlingRights.empty()) fenCastlingRights = "-";
+
+    fen += fenCastlingRights;
+    fen += " ";
+    fen += (enPassantSquare == -1) ? "-" : Util::positionToString(enPassantSquare);
+    fen += " ";
+    fen += std::to_string(halfMoveClock);
+    fen += " ";
+    fen += std::to_string(fullMoveClock);
 
     return fen;
 }

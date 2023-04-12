@@ -3,6 +3,7 @@
 #include "ChessBoard.h"
 #include "Piece.h"
 #include "Move.h"
+#include "Util.h"
 
 ChessBoard board;
 
@@ -39,7 +40,7 @@ char* listPieces(){
     std::string string = "White pieces: ";
     for (ChessBoard::Piece &piece: board.whitePieces){
         string += "[";
-        string += pieceToString(piece.type, Piece::WHITE);
+        string += Util::pieceToString(piece.type, Piece::WHITE);
         string += ", ";
         string += std::to_string(piece.position);
         string += "] ";
@@ -47,7 +48,7 @@ char* listPieces(){
     string += "\nBlack pieces:";
     for (ChessBoard::Piece &piece: board.blackPieces){
         string += "[";
-        string += pieceToString(piece.type, Piece::BLACK);
+        string += Util::pieceToString(piece.type, Piece::BLACK);
         string += ", ";
         string += std::to_string(piece.position);
         string += "] ";
@@ -66,7 +67,7 @@ int main() {
 
     board.setStartingPosition();
 
-    std::cout << listPieces() << std::endl;
+    std::cout << board.fen() << std::endl;
 
     return 0;
 }
