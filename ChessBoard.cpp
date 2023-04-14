@@ -75,6 +75,8 @@ std::ostream &operator<<(std::ostream &os, const ChessBoard &board) {
 }
 
 void ChessBoard::makeMove(Move move) {
+
+    if (move.flag == ENPASSANT) removePiece(enPassantSquare);
     enPassantSquare = -1;
 
     if (squares[move.start].type == PAWN || (move.flag >= 1 && move.flag <= 5)) halfMoveClock = 0;
@@ -89,15 +91,8 @@ void ChessBoard::makeMove(Move move) {
     } else {
         movePiece(move.start, move.end);
 
-        if (move.flag == ENPASSANT) {
-            removePiece(enPassantSquare);
-        } else if (move.flag == DOUBLEPAWNPUSH) {
-            short left = move.end - 1;
-            short right = move.end + 1;
-            if (squares[left].type == PAWN && squares[left].color != move.player
-                || squares[right].type == PAWN && squares[right].color != move.player) {
-                enPassantSquare = move.end;
-            }
+        if (move.flag == DOUBLEPAWNPUSH) {
+            enPassantSquare = move.end;
         } else if (move.flag == CASTLEKINGSIDE) {
             movePiece(move.end + 1, move.end - 1);
         } else if (move.flag == CASTLEQUEENSIDE) {

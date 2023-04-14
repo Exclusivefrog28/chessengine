@@ -40,25 +40,32 @@ std::vector<Moves::Move> MoveGenerator::pseudoLegalMoves(ChessBoard board) {
                     if (piece.position < 16 || piece.position >= 48) {
                         short doublePushTarget = piece.position + (sign * OFFSET[PAWN][3]);
                         if (board.squares[pushTarget].type == EMPTY)
-                            moves.push_back({piece.position, doublePushTarget, EMPTY, DOUBLEPAWNPUSH, board.sideToMove});
+                            moves.push_back(
+                                    {piece.position, doublePushTarget, EMPTY, DOUBLEPAWNPUSH, board.sideToMove});
                     }
                 }
             }
-            for (int i = 2; i < 4; ++i) {
-                short n = MAILBOX[MAILBOX64[piece.position] + OFFSET[piece.type][i]];
+            for (int i = 1; i < 3; ++i) {
+                short n = MAILBOX[MAILBOX64[piece.position] + (sign * OFFSET[PAWN][i])];
                 if (n == -1) break;
                 ChessBoard::Square target = board.squares[n];
-                if(target.type != EMPTY && target.color != board.sideToMove){
+                if (target.type != EMPTY && target.color != board.sideToMove) {
                     if (n <= 7 || n >= 56) {
-                        moves.push_back({piece.position, pushTarget, KNIGHT, static_cast<MoveFlag>(target.type), board.sideToMove});
-                        moves.push_back({piece.position, pushTarget, BISHOP, static_cast<MoveFlag>(target.type), board.sideToMove});
-                        moves.push_back({piece.position, pushTarget, ROOK, static_cast<MoveFlag>(target.type), board.sideToMove});
-                        moves.push_back({piece.position, pushTarget, QUEEN, static_cast<MoveFlag>(target.type), board.sideToMove});
-                    } else moves.push_back({piece.position, pushTarget, EMPTY, static_cast<MoveFlag>(target.type), board.sideToMove});
+                        moves.push_back(
+                                {piece.position, n, KNIGHT, static_cast<MoveFlag>(target.type), board.sideToMove});
+                        moves.push_back(
+                                {piece.position, n, BISHOP, static_cast<MoveFlag>(target.type), board.sideToMove});
+                        moves.push_back(
+                                {piece.position, n, ROOK, static_cast<MoveFlag>(target.type), board.sideToMove});
+                        moves.push_back(
+                                {piece.position, n, QUEEN, static_cast<MoveFlag>(target.type), board.sideToMove});
+                    } else
+                        moves.push_back(
+                                {piece.position, n, EMPTY, static_cast<MoveFlag>(target.type), board.sideToMove});
                 }
-                if(target.type == EMPTY && board.enPassantSquare != -1){
+                if (board.enPassantSquare != -1) {
                     short enPassantTarget = n - (sign * OFFSET[PAWN][0]);
-                    if(enPassantTarget == board.enPassantSquare) moves.push_back({piece.position, enPassantTarget, EMPTY, ENPASSANT, board.sideToMove});
+                    if (enPassantTarget == board.enPassantSquare) moves.push_back({piece.position, n, EMPTY, ENPASSANT, board.sideToMove});
                 }
             }
         }
