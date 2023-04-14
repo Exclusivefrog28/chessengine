@@ -4,6 +4,7 @@
 #include "Piece.h"
 #include "Move.h"
 #include "Util.h"
+#include "MoveGenerator.h"
 
 ChessBoard board;
 
@@ -62,12 +63,41 @@ char* listPieces(){
 }
 
 EMSCRIPTEN_KEEPALIVE
+char* getMoves(int position){
+    std::string selectedMoves;
+    std::vector<Move> moves = MoveGenerator::pseudoLegalMoves(board);
+
+    bool empty = true;
+
+    selectedMoves += "[";
+    for (const Move move: moves){
+        if(move.start == position) {
+            empty = false;
+            selectedMoves += "{";
+            selectedMoves += R"("start":")";
+            selectedMoves += Util::positionToString(move.start);
+            selectedMoves += R"(","end":")";
+            selectedMoves += Util::positionToString(move.end);
+            selectedMoves += R"(","promotionType":")";
+            selectedMoves += std::to_string(move.promotionType);
+            selectedMoves += R"(","flag":")";
+            selectedMoves += std::to_string(move.flag);
+            selectedMoves += R"(","player":")";
+            selectedMoves += std::to_string(move.player);
+            selectedMoves += "\"},";
+        }
+    }
+    if(!empty) selectedMoves.pop_back();
+    selectedMoves += "]";
+
+    const int length = selectedMoves.length();
+    char* chararray = new char[length + 1];
+    strcpy(chararray, selectedMoves.c_str());
+    return chararray;
+}
+
+EMSCRIPTEN_KEEPALIVE
 int main() {
-
-
-    board.setStartingPosition();
-
-    std::cout << board.fen() << std::endl;
 
     return 0;
 }

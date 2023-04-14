@@ -59,6 +59,8 @@ public:
     void makeMove(Move move);
     void unMakeMove();
 
+    bool inCheck();
+
 private:
     static Color invertColor(Color color);
 

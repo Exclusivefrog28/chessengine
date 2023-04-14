@@ -91,7 +91,7 @@ void ChessBoard::makeMove(Move move) {
 
         if (move.flag == ENPASSANT) {
             removePiece(enPassantSquare);
-        } else if (move.flag == DOUBLEPAWNMOVE) {
+        } else if (move.flag == DOUBLEPAWNPUSH) {
             short left = move.end - 1;
             short right = move.end + 1;
             if (squares[left].type == PAWN && squares[left].color != move.player
@@ -251,6 +251,14 @@ std::string ChessBoard::fen() {
     fen += std::to_string(fullMoveClock);
 
     return fen;
+}
+
+bool ChessBoard::inCheck() {
+
+
+
+
+    return false;
 }
 
 ChessBoard::ChessBoard() = default;
