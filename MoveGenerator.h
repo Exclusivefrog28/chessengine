@@ -7,6 +7,7 @@
 class MoveGenerator {
 public:
     static std::vector<Moves::Move> pseudoLegalMoves(ChessBoard board);
+    static bool isSquareAttacked(const ChessBoard& board, short square, Color color);
 
 };
 

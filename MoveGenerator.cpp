@@ -9,10 +9,10 @@ std::vector<Moves::Move> MoveGenerator::pseudoLegalMoves(ChessBoard board) {
 
     for (const ChessBoard::Piece &piece: *pieceList) {
         if (piece.type != Piece::PAWN) {
-            for (short j = 0; j < OFFSETS[piece.type]; ++j) {
+            for (short i = 0; i < OFFSETS[piece.type]; ++i) {
                 short n = piece.position;
                 while (true) {
-                    n = MAILBOX[MAILBOX64[n] + OFFSET[piece.type][j]];
+                    n = MAILBOX[MAILBOX64[n] + OFFSET[piece.type][i]];
                     if (n == -1) break;
                     ChessBoard::Square target = board.squares[n];
                     if (target.type != Piece::EMPTY) {
@@ -45,9 +45,9 @@ std::vector<Moves::Move> MoveGenerator::pseudoLegalMoves(ChessBoard board) {
                     }
                 }
             }
-            for (int i = 1; i < 3; ++i) {
+            for (short i = 1; i < 3; ++i) {
                 short n = MAILBOX[MAILBOX64[piece.position] + (sign * OFFSET[PAWN][i])];
-                if (n == -1) break;
+                if (n == -1) continue;
                 ChessBoard::Square target = board.squares[n];
                 if (target.type != EMPTY && target.color != board.sideToMove) {
                     if (n <= 7 || n >= 56) {
@@ -72,4 +72,44 @@ std::vector<Moves::Move> MoveGenerator::pseudoLegalMoves(ChessBoard board) {
     }
 
     return moves;
+}
+
+bool MoveGenerator::isSquareAttacked(const ChessBoard& board, short square, Color color) {
+    short sign =  (color == WHITE) ? -1 : 1;
+
+    //PAWNS
+    for (short i = 1; i < 3; ++i) {
+        short n = MAILBOX[MAILBOX64[square] + (sign * OFFSET[PAWN][i])];
+        if (n != -1) {
+            if (board.squares[n].color != color && board.squares[n].type == PAWN) return true;
+        }
+    }
+    //KNIGHTS
+    for (short i = 0; i < OFFSETS[KNIGHT]; ++i) {
+        short n = MAILBOX[MAILBOX64[square] + OFFSET[KNIGHT][i]];
+        if (n != -1) {
+            if (board.squares[n].color != color && board.squares[n].type == KNIGHT) return true;
+        }
+    }
+    //REST
+    for (short i = 0; i < OFFSETS[QUEEN]; ++i) {
+        short n = square;
+        short offset = OFFSET[QUEEN][i];
+        bool sliding = false;
+        while (true) {
+            n = MAILBOX[MAILBOX64[n] + offset];
+            if (n == -1) break;
+            ChessBoard::Square target = board.squares[n];
+            if (target.type != Piece::EMPTY ) {
+                if (target.color != color && (SLIDE[target.type] || !sliding) && target.type != PAWN && target.type != KNIGHT) {
+                    const short* offsetPtr = std::find(OFFSET[target.type], OFFSET[target.type] + OFFSETS[target.type], offset);
+                    if(offsetPtr != OFFSET[target.type] + OFFSETS[target.type]) return true;
+                }
+                break;
+            }
+            sliding = true;
+        }
+    }
+
+    return false;
 }

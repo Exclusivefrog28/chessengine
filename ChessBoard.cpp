@@ -250,9 +250,6 @@ std::string ChessBoard::fen() {
 
 bool ChessBoard::inCheck() {
 
-
-
-
     return false;
 }
 
