@@ -1,7 +1,7 @@
 #ifndef CHESSENGINE_PIECE_H
 #define CHESSENGINE_PIECE_H
 
-namespace Piece {
+namespace Pieces {
 
     enum Type {
         EMPTY = 0,
@@ -16,6 +16,11 @@ namespace Piece {
     enum Color {
         WHITE = 0,
         BLACK = 1
+    };
+
+    struct Piece {
+        Type type;
+        short position;
     };
 }
 

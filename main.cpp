@@ -15,8 +15,8 @@ void init() {
 }
 EMSCRIPTEN_KEEPALIVE
 char *move(int start, int end, int flag, int promotionType, int player) {
-    board.makeMove({static_cast<short>(start), static_cast<short>(end), static_cast<Piece::Type>(promotionType),
-                    static_cast<MoveFlag>(flag), static_cast<Piece::Color>(player)});
+    board.makeMove({static_cast<short>(start), static_cast<short>(end), static_cast<Pieces::Type>(promotionType),
+                    static_cast<MoveFlag>(flag), static_cast<Pieces::Color>(player)});
 
     std::string fen = board.fen();
     const int length = fen.length();
@@ -39,17 +39,17 @@ char *unmove() {
 EMSCRIPTEN_KEEPALIVE
 char *listPieces() {
     std::string string = "White pieces: ";
-    for (ChessBoard::Piece &piece: board.whitePieces) {
+    for (Piece &piece: board.whitePieces) {
         string += "[";
-        string += Util::pieceToString(piece.type, Piece::WHITE);
+        string += Util::pieceToString(piece.type, Pieces::WHITE);
         string += ", ";
         string += std::to_string(piece.position);
         string += "] ";
     }
     string += "\nBlack pieces:";
-    for (ChessBoard::Piece &piece: board.blackPieces) {
+    for (Piece &piece: board.blackPieces) {
         string += "[";
-        string += Util::pieceToString(piece.type, Piece::BLACK);
+        string += Util::pieceToString(piece.type, Pieces::BLACK);
         string += ", ";
         string += std::to_string(piece.position);
         string += "] ";

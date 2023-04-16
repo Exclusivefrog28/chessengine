@@ -179,29 +179,29 @@ Color ChessBoard::invertColor(Color color) {
 
 void ChessBoard::updateCastlingRights(Move move) {
     if (move.player == WHITE) {
-        if (castlingRights.whiteShort || castlingRights.whiteLong) {
+        if (castlingRights.whiteKingSide || castlingRights.whiteQueenSide) {
             if (move.start == 60) {
-                castlingRights.whiteShort = false;
-                castlingRights.whiteLong = false;
+                castlingRights.whiteKingSide = false;
+                castlingRights.whiteQueenSide = false;
             } else {
-                if (castlingRights.whiteShort && move.start == 63) castlingRights.whiteShort = false;
-                if (castlingRights.whiteLong && move.start == 56) castlingRights.whiteLong = false;
+                if (castlingRights.whiteKingSide && move.start == 63) castlingRights.whiteKingSide = false;
+                if (castlingRights.whiteQueenSide && move.start == 56) castlingRights.whiteQueenSide = false;
             }
         }
-        if (castlingRights.blackShort && move.end == 7) castlingRights.blackShort = false;
-        if (castlingRights.blackLong && move.end == 0) castlingRights.blackLong = false;
+        if (castlingRights.blackKingSide && move.end == 7) castlingRights.blackKingSide = false;
+        if (castlingRights.blackQueenSide && move.end == 0) castlingRights.blackQueenSide = false;
     } else {
-        if (castlingRights.blackShort || castlingRights.blackLong) {
+        if (castlingRights.blackKingSide || castlingRights.blackQueenSide) {
             if (move.start == 4) {
-                castlingRights.blackShort = false;
-                castlingRights.blackLong = false;
+                castlingRights.blackKingSide = false;
+                castlingRights.blackQueenSide = false;
             } else {
-                if (castlingRights.blackShort && move.start == 7) castlingRights.blackShort = false;
-                if (castlingRights.blackLong && move.start == 0) castlingRights.blackLong = false;
+                if (castlingRights.blackKingSide && move.start == 7) castlingRights.blackKingSide = false;
+                if (castlingRights.blackQueenSide && move.start == 0) castlingRights.blackQueenSide = false;
             }
         }
-        if (castlingRights.whiteShort && move.end == 63) castlingRights.whiteShort = false;
-        if (castlingRights.whiteLong && move.end == 56) castlingRights.whiteLong = false;
+        if (castlingRights.whiteKingSide && move.end == 63) castlingRights.whiteKingSide = false;
+        if (castlingRights.whiteQueenSide && move.end == 56) castlingRights.whiteQueenSide = false;
     }
 }
 
@@ -231,10 +231,10 @@ std::string ChessBoard::fen() {
 
     std::string fenCastlingRights;
 
-    if(castlingRights.whiteShort) fenCastlingRights += "K";
-    if(castlingRights.whiteLong) fenCastlingRights += "Q";
-    if(castlingRights.blackShort) fenCastlingRights += "k";
-    if(castlingRights.blackLong) fenCastlingRights += "q";
+    if(castlingRights.whiteKingSide) fenCastlingRights += "K";
+    if(castlingRights.whiteQueenSide) fenCastlingRights += "Q";
+    if(castlingRights.blackKingSide) fenCastlingRights += "k";
+    if(castlingRights.blackQueenSide) fenCastlingRights += "q";
     if(fenCastlingRights.empty()) fenCastlingRights = "-";
 
     fen += fenCastlingRights;
@@ -246,11 +246,6 @@ std::string ChessBoard::fen() {
     fen += std::to_string(fullMoveClock);
 
     return fen;
-}
-
-bool ChessBoard::inCheck() {
-
-    return false;
 }
 
 ChessBoard::ChessBoard() = default;

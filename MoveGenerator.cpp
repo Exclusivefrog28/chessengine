@@ -1,21 +1,22 @@
 #include "MoveGenerator.h"
 
-std::vector<Moves::Move> MoveGenerator::pseudoLegalMoves(ChessBoard board) {
+std::vector<Moves::Move> MoveGenerator::pseudoLegalMoves(const ChessBoard board) {
     std::vector<Move> moves;
 
-    std::vector<ChessBoard::Piece> *pieceList;
+    const std::vector<Piece> *pieceList;
     if (board.sideToMove == WHITE) pieceList = &board.whitePieces;
     else pieceList = &board.blackPieces;
 
-    for (const ChessBoard::Piece &piece: *pieceList) {
-        if (piece.type != Piece::PAWN) {
+    for (const Piece &piece: *pieceList) {
+        if (piece.type != Pieces::PAWN) {
+
             for (short i = 0; i < OFFSETS[piece.type]; ++i) {
                 short n = piece.position;
                 while (true) {
                     n = MAILBOX[MAILBOX64[n] + OFFSET[piece.type][i]];
                     if (n == -1) break;
                     ChessBoard::Square target = board.squares[n];
-                    if (target.type != Piece::EMPTY) {
+                    if (target.type != Pieces::EMPTY) {
                         if (target.color != board.sideToMove)
                             moves.push_back(
                                     {piece.position, n, EMPTY, static_cast<MoveFlag>(target.type), board.sideToMove});
@@ -25,6 +26,34 @@ std::vector<Moves::Move> MoveGenerator::pseudoLegalMoves(ChessBoard board) {
                     if (!SLIDE[piece.type]) break;
                 }
             }
+
+            if (piece.type == Pieces::KING && !inCheck(board)) {
+                short kingPosition = piece.position;
+                if ((board.castlingRights.whiteKingSide && board.sideToMove == WHITE) ||
+                    (board.castlingRights.blackKingSide && board.sideToMove == BLACK)) {
+                    if (!isSquareAttacked(board, kingPosition + 1, board.sideToMove) &&
+                        board.squares[kingPosition + 1].type == EMPTY &&
+                        !isSquareAttacked(board, kingPosition + 2, board.sideToMove) &&
+                        board.squares[kingPosition + 2].type == EMPTY) {
+                        moves.push_back({kingPosition, static_cast<short>(kingPosition + 2), EMPTY, CASTLEKINGSIDE,
+                                         board.sideToMove});
+                    }
+                }
+                if ((board.castlingRights.whiteQueenSide && board.sideToMove == WHITE) ||
+                    (board.castlingRights.blackQueenSide && board.sideToMove == BLACK)) {
+
+                    if (!isSquareAttacked(board, kingPosition - 1, board.sideToMove) &&
+                        board.squares[kingPosition - 1].type == EMPTY &&
+                        !isSquareAttacked(board, kingPosition - 2, board.sideToMove) &&
+                        board.squares[kingPosition - 2].type == EMPTY &&
+                        board.squares[kingPosition - 3].type == EMPTY) {
+                        moves.push_back({kingPosition, static_cast<short>(kingPosition - 2), EMPTY, CASTLEQUEENSIDE,
+                                         board.sideToMove});
+                    }
+                }
+            }
+
+
         } else {
             short sign = (board.sideToMove == WHITE) ? -1 : 1;
 
@@ -65,7 +94,8 @@ std::vector<Moves::Move> MoveGenerator::pseudoLegalMoves(ChessBoard board) {
                 }
                 if (board.enPassantSquare != -1) {
                     short enPassantTarget = n - (sign * OFFSET[PAWN][0]);
-                    if (enPassantTarget == board.enPassantSquare) moves.push_back({piece.position, n, EMPTY, ENPASSANT, board.sideToMove});
+                    if (enPassantTarget == board.enPassantSquare)
+                        moves.push_back({piece.position, n, EMPTY, ENPASSANT, board.sideToMove});
                 }
             }
         }
@@ -74,8 +104,8 @@ std::vector<Moves::Move> MoveGenerator::pseudoLegalMoves(ChessBoard board) {
     return moves;
 }
 
-bool MoveGenerator::isSquareAttacked(const ChessBoard& board, short square, Color color) {
-    short sign =  (color == WHITE) ? -1 : 1;
+bool MoveGenerator::isSquareAttacked(const ChessBoard &board, short square, Color color) {
+    short sign = (color == WHITE) ? -1 : 1;
 
     //PAWNS
     for (short i = 1; i < 3; ++i) {
@@ -100,10 +130,12 @@ bool MoveGenerator::isSquareAttacked(const ChessBoard& board, short square, Colo
             n = MAILBOX[MAILBOX64[n] + offset];
             if (n == -1) break;
             ChessBoard::Square target = board.squares[n];
-            if (target.type != Piece::EMPTY ) {
-                if (target.color != color && (SLIDE[target.type] || !sliding) && target.type != PAWN && target.type != KNIGHT) {
-                    const short* offsetPtr = std::find(OFFSET[target.type], OFFSET[target.type] + OFFSETS[target.type], offset);
-                    if(offsetPtr != OFFSET[target.type] + OFFSETS[target.type]) return true;
+            if (target.type != Pieces::EMPTY) {
+                if (target.color != color && (SLIDE[target.type] || !sliding) && target.type != PAWN &&
+                    target.type != KNIGHT) {
+                    const short *offsetPtr = std::find(OFFSET[target.type], OFFSET[target.type] + OFFSETS[target.type],
+                                                       offset);
+                    if (offsetPtr != OFFSET[target.type] + OFFSETS[target.type]) return true;
                 }
                 break;
             }
@@ -112,4 +144,20 @@ bool MoveGenerator::isSquareAttacked(const ChessBoard& board, short square, Colo
     }
 
     return false;
+}
+
+bool MoveGenerator::inCheck(const ChessBoard &board) {
+    short kingPosition = -1;
+    const std::vector<Piece> *pieceList;
+    if (board.sideToMove == WHITE) pieceList = &board.whitePieces;
+    else pieceList = &board.blackPieces;
+
+    for (Piece piece: *pieceList) {
+        if (piece.type == KING) {
+            kingPosition = piece.position;
+            break;
+        }
+    }
+
+    return MoveGenerator::isSquareAttacked(board, kingPosition, board.sideToMove);
 }

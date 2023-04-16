@@ -5,7 +5,7 @@
 
 namespace Util {
 
-    using namespace Piece;
+    using namespace Pieces;
 
     static std::string pieceToString(Type type, Color color) {
         std::string piece = "p";

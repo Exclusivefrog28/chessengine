@@ -8,7 +8,7 @@
 #include "Piece.h"
 #include "Util.h"
 
-using namespace Piece;
+using namespace Pieces;
 using namespace Moves;
 
 class ChessBoard {
@@ -21,16 +21,11 @@ public:
         Color color;
     };
 
-    struct Piece {
-        Type type;
-        short position;
-    };
-
     struct CastlingRights {
-        bool blackShort;
-        bool blackLong;
-        bool whiteShort;
-        bool whiteLong;
+        bool blackKingSide;
+        bool blackQueenSide;
+        bool whiteKingSide;
+        bool whiteQueenSide;
     };
 
 
@@ -58,8 +53,6 @@ public:
 
     void makeMove(Move move);
     void unMakeMove();
-
-    bool inCheck();
 
 private:
     static Color invertColor(Color color);

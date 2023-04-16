@@ -5,7 +5,7 @@
 
 namespace Moves {
 
-    using Piece::Color, Piece::Type;
+    using Pieces::Color, Pieces::Type;
 
     enum MoveFlag {
         QUIET = 0,
