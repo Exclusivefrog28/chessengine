@@ -15,12 +15,6 @@ class ChessBoard {
 
 public:
 
-
-    struct Square {
-        Type type;
-        Color color;
-    };
-
     struct CastlingRights {
         bool blackKingSide;
         bool blackQueenSide;
@@ -29,7 +23,7 @@ public:
     };
 
 
-    Square squares[64]{};
+    std::array<Square, 64> squares;
 
     std::vector<Piece> whitePieces;
     std::vector<Piece> blackPieces;
@@ -43,22 +37,27 @@ public:
 
     std::vector<Move> moveHistory;
     std::vector<CastlingRights> castlingRightHistory;
+    std::vector<short> enPassantHistory;
 
     ChessBoard();
 
     void setStartingPosition();
 
-    friend std::ostream& operator<<(std::ostream& os, const ChessBoard& board);
+    void setPosition(std::string fen);
+
+    friend std::ostream &operator<<(std::ostream &os, const ChessBoard &board);
+
     std::string fen();
 
     void makeMove(Move move);
+
     void unMakeMove();
 
 private:
-    static Color invertColor(Color color);
+    void movePiece(short start, short end);
 
-    void movePiece(short start ,short end);
     void setPiece(short position, Square piece);
+
     void removePiece(short position);
 
     void updateCastlingRights(Move move);

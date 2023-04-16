@@ -22,6 +22,16 @@ namespace Pieces {
         Type type;
         short position;
     };
+
+    struct Square {
+        Type type;
+        Color color;
+    };
+
+    static Color invertColor(Color color) {
+        if (color == WHITE) return BLACK;
+        else return WHITE;
+    }
 }
 
 #endif //CHESSENGINE_PIECE_H

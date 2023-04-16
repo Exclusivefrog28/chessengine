@@ -15,7 +15,7 @@ std::vector<Moves::Move> MoveGenerator::pseudoLegalMoves(const ChessBoard board)
                 while (true) {
                     n = MAILBOX[MAILBOX64[n] + OFFSET[piece.type][i]];
                     if (n == -1) break;
-                    ChessBoard::Square target = board.squares[n];
+                    Square target = board.squares[n];
                     if (target.type != Pieces::EMPTY) {
                         if (target.color != board.sideToMove)
                             moves.push_back(
@@ -27,7 +27,7 @@ std::vector<Moves::Move> MoveGenerator::pseudoLegalMoves(const ChessBoard board)
                 }
             }
 
-            if (piece.type == Pieces::KING && !inCheck(board)) {
+            if (piece.type == Pieces::KING && !inCheck(board, board.sideToMove)) {
                 short kingPosition = piece.position;
                 if ((board.castlingRights.whiteKingSide && board.sideToMove == WHITE) ||
                     (board.castlingRights.blackKingSide && board.sideToMove == BLACK)) {
@@ -68,7 +68,7 @@ std::vector<Moves::Move> MoveGenerator::pseudoLegalMoves(const ChessBoard board)
                     moves.push_back({piece.position, pushTarget, EMPTY, QUIET, board.sideToMove});
                     if (piece.position < 16 || piece.position >= 48) {
                         short doublePushTarget = piece.position + (sign * OFFSET[PAWN][3]);
-                        if (board.squares[pushTarget].type == EMPTY)
+                        if (board.squares[doublePushTarget].type == EMPTY)
                             moves.push_back(
                                     {piece.position, doublePushTarget, EMPTY, DOUBLEPAWNPUSH, board.sideToMove});
                     }
@@ -77,7 +77,7 @@ std::vector<Moves::Move> MoveGenerator::pseudoLegalMoves(const ChessBoard board)
             for (short i = 1; i < 3; ++i) {
                 short n = MAILBOX[MAILBOX64[piece.position] + (sign * OFFSET[PAWN][i])];
                 if (n == -1) continue;
-                ChessBoard::Square target = board.squares[n];
+                Square target = board.squares[n];
                 if (target.type != EMPTY && target.color != board.sideToMove) {
                     if (n <= 7 || n >= 56) {
                         moves.push_back(
@@ -129,7 +129,7 @@ bool MoveGenerator::isSquareAttacked(const ChessBoard &board, short square, Colo
         while (true) {
             n = MAILBOX[MAILBOX64[n] + offset];
             if (n == -1) break;
-            ChessBoard::Square target = board.squares[n];
+            Square target = board.squares[n];
             if (target.type != Pieces::EMPTY) {
                 if (target.color != color && (SLIDE[target.type] || !sliding) && target.type != PAWN &&
                     target.type != KNIGHT) {
@@ -146,10 +146,10 @@ bool MoveGenerator::isSquareAttacked(const ChessBoard &board, short square, Colo
     return false;
 }
 
-bool MoveGenerator::inCheck(const ChessBoard &board) {
+bool MoveGenerator::inCheck(const ChessBoard &board, Color color) {
     short kingPosition = -1;
     const std::vector<Piece> *pieceList;
-    if (board.sideToMove == WHITE) pieceList = &board.whitePieces;
+    if (color == WHITE) pieceList = &board.whitePieces;
     else pieceList = &board.blackPieces;
 
     for (Piece piece: *pieceList) {
@@ -159,5 +159,35 @@ bool MoveGenerator::inCheck(const ChessBoard &board) {
         }
     }
 
-    return MoveGenerator::isSquareAttacked(board, kingPosition, board.sideToMove);
+    return MoveGenerator::isSquareAttacked(board, kingPosition, color);
+}
+
+unsigned long long MoveGenerator::perft(int depth, ChessBoard board) {
+    if (depth == 0) return 1ULL;
+    unsigned long long nodes = 0ULL;
+
+    std::vector<Move> moves = pseudoLegalMoves(board);
+
+    for (const Move move: moves) {
+        board.makeMove(move);
+        if (!inCheck(board, Pieces::invertColor(board.sideToMove))) {
+            unsigned long long childNodes = perft(depth - 1, board);
+//            if(depth == 6){
+//                printf("Move: %s-%s %d\n", Util::positionToString(move.start).c_str(), Util::positionToString(move.end).c_str(), move.flag);
+//                printf("Nodes: %llu\n", childNodes);
+//            }
+            nodes += childNodes;
+        }
+        board.unMakeMove();
+    }
+
+    return nodes;
+}
+
+bool MoveGenerator::isLegalMove(ChessBoard board, Moves::Move move) {
+    bool isLegal = false;
+    board.makeMove(move);
+    if (!inCheck(board, Pieces::invertColor(board.sideToMove))) isLegal = true;
+    board.unMakeMove();
+    return isLegal;
 }

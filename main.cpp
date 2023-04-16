@@ -71,7 +71,7 @@ char *getMoves(int position) {
 
     selectedMoves += "[";
     for (const Move move: moves) {
-        if (move.start == position) {
+        if (move.start == position && MoveGenerator::isLegalMove(board, move)) {
             empty = false;
             selectedMoves += "{";
             selectedMoves += R"("start":")";
@@ -114,7 +114,29 @@ char *getAttacks() {
 }
 
 EMSCRIPTEN_KEEPALIVE
+void setFen(char *fen) {
+    std::string fenString(fen);
+    board.setPosition(fenString);
+}
+
+EMSCRIPTEN_KEEPALIVE
 int main() {
+//    board.setStartingPosition();
+//
+//    std::cout << board.fen() << std::endl;
+//
+//    board.setPosition("r4rk1/1pp1qppp/p1np1n2/2b1p1B1/2B1P1b1/P1NP1N2/1PP1QPPP/R4RK1 w - - 0 10");
+//
+//    std::cout << board.fen() << std::endl;
+//
+//    printf("%s", listPieces());
+//
+//    for (int i = 0; i < 7; ++i) {
+//        std::cout << i << " : " << MoveGenerator::perft(i, board) << "\n";
+//    }
+//    std::cout << board.fen() << std::endl;
+//
+//    printf("%s", listPieces());
 
     return 0;
 }
