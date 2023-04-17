@@ -1,6 +1,7 @@
 #ifndef CHESSENGINE_UTIL_H
 #define CHESSENGINE_UTIL_H
 
+#include <array>
 #include "Piece.h"
 
 namespace Util {

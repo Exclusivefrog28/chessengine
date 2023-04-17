@@ -1,6 +1,6 @@
 #include "MoveGenerator.h"
 
-std::vector<Moves::Move> MoveGenerator::pseudoLegalMoves(const ChessBoard board) {
+std::vector<Moves::Move> MoveGenerator::pseudoLegalMoves(const ChessBoard& board) {
     std::vector<Move> moves;
 
     const std::vector<Piece> *pieceList;
@@ -162,7 +162,7 @@ bool MoveGenerator::inCheck(const ChessBoard &board, Color color) {
     return MoveGenerator::isSquareAttacked(board, kingPosition, color);
 }
 
-unsigned long long MoveGenerator::perft(int depth, ChessBoard board) {
+unsigned long long MoveGenerator::perft(int depth, ChessBoard& board) {
     if (depth == 0) return 1ULL;
     unsigned long long nodes = 0ULL;
 
@@ -184,7 +184,7 @@ unsigned long long MoveGenerator::perft(int depth, ChessBoard board) {
     return nodes;
 }
 
-bool MoveGenerator::isLegalMove(ChessBoard board, Moves::Move move) {
+bool MoveGenerator::isLegalMove(ChessBoard& board, Moves::Move move) {
     bool isLegal = false;
     board.makeMove(move);
     if (!inCheck(board, Pieces::invertColor(board.sideToMove))) isLegal = true;

@@ -129,22 +129,17 @@ int runPerft(int depth, const char* fen) {
 
 EMSCRIPTEN_KEEPALIVE
 int main() {
-//    board.setStartingPosition();
-//
-//    std::cout << board.fen() << std::endl;
-//
+
 //    board.setPosition("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1");
 //
 //    std::cout << board.fen() << std::endl;
 //
-//    printf("%s", listPieces());
-//
-//    for (int i = 0; i < 7; ++i) {
-//        std::cout << i << " : " << MoveGenerator::perft(i, board) << "\n";
+//    for (int i = 0; i < 11; ++i) {
+//        std::chrono::time_point start = std::chrono::high_resolution_clock::now();
+//        unsigned long long nodes =  MoveGenerator::perft(i, board);
+//        std::cout << i << " : " << nodes << " nodes in " << std::chrono::duration_cast<std::chrono::seconds>(std::chrono::high_resolution_clock::now() - start).count() << "s\n" << std::endl;
 //    }
 //    std::cout << board.fen() << std::endl;
-//
-//    printf("%s", listPieces());
 
     return 0;
 }
