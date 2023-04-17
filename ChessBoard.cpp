@@ -141,8 +141,18 @@ void ChessBoard::unMakeMove() {
 
 void ChessBoard::movePiece(short start, short end) {
     if (squares[end].type != EMPTY) removePiece(end);
-    setPiece(end, squares[start]);
-    removePiece(start);
+    std::vector<Piece> *pieceList = (squares[start].color == WHITE) ? &whitePieces : &blackPieces;
+
+    squares[end] = squares[start];
+    squares[start] =  {Pieces::EMPTY, WHITE};
+
+
+    for (int i = 0; i < (*pieceList).size(); ++i) {
+        if ((*pieceList)[i].position == start) {
+            (*pieceList)[i].position = end;
+            break;
+        }
+    }
 }
 
 void ChessBoard::setPiece(short position, Square piece) {
