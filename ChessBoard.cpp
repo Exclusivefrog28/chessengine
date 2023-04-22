@@ -1,63 +1,7 @@
 #include "ChessBoard.h"
 
 void ChessBoard::setStartingPosition() {
-
-    whitePieces = {};
-    blackPieces = {};
-
-    for (short i = 0; i < 64; i++) {
-        if (i < 16 || i >= 48) {
-
-            switch (i) {
-                case 0:
-                case 7:
-                case 56:
-                case 63:
-                    squares[i].type = ROOK;
-                    break;
-                case 1:
-                case 6:
-                case 57:
-                case 62:
-                    squares[i].type = KNIGHT;
-                    break;
-                case 2:
-                case 5:
-                case 58:
-                case 61:
-                    squares[i].type = BISHOP;
-                    break;
-                case 3:
-                case 59:
-                    squares[i].type = QUEEN;
-                    break;
-                case 4:
-                case 60:
-                    squares[i].type = KING;
-                    break;
-                default:
-                    squares[i].type = PAWN;
-                    break;
-            }
-
-            if (i < 16) {
-                squares[i].color = BLACK;
-                blackPieces.push_back({squares[i].type, i});
-            } else {
-                squares[i].color = WHITE;
-                whitePieces.push_back({squares[i].type, i});
-            }
-
-        } else {
-            squares[i].type = EMPTY;
-            squares[i].color = WHITE;
-        }
-    }
-
-    sideToMove = WHITE;
-    castlingRights = {true, true, true, true};
-    enPassantSquare = -1;
-
+    setPosition("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
 }
 
 std::ostream &operator<<(std::ostream &os, const ChessBoard &board) {
@@ -74,7 +18,7 @@ std::ostream &operator<<(std::ostream &os, const ChessBoard &board) {
     return os;
 }
 
-void ChessBoard::makeMove(Move move) {
+void ChessBoard::makeMove(const Move &move) {
 
     enPassantHistory.push_back(enPassantSquare);
     if (move.flag == ENPASSANT) removePiece(enPassantSquare);
@@ -102,7 +46,8 @@ void ChessBoard::makeMove(Move move) {
     }
 
     sideToMove = Pieces::invertColor(sideToMove);
-    moveHistory.push_back(move);
+    Move m = move;
+    moveHistory.push_back(m);
     castlingRightHistory.push_back(castlingRights);
     updateCastlingRights(move);
 }
@@ -139,43 +84,81 @@ void ChessBoard::unMakeMove() {
     sideToMove = Pieces::invertColor(sideToMove);
 }
 
-void ChessBoard::movePiece(short start, short end) {
+void ChessBoard::movePiece(const short &start, const short &end) {
     if (squares[end].type != EMPTY) removePiece(end);
-    std::vector<Piece> *pieceList = (squares[start].color == WHITE) ? &whitePieces : &blackPieces;
+
+    Square piece = squares[start];
 
     squares[end] = squares[start];
-    squares[start] =  {Pieces::EMPTY, WHITE};
+    squares[start] = {Pieces::EMPTY, WHITE};
 
-
-    for (int i = 0; i < (*pieceList).size(); ++i) {
-        if ((*pieceList)[i].position == start) {
-            (*pieceList)[i].position = end;
-            break;
+    switch (piece.type) {
+        case PAWN: {
+            std::vector<short> *pawnList = (piece.color == WHITE) ? &whitePawns : &blackPawns;
+            for (int i = 0; i < pawnList->size(); ++i) {
+                if ((*pawnList)[i] == start) {
+                    (*pawnList)[i] = end;
+                    break;
+                }
+            }
         }
+            break;
+        case KING: {
+            short *kingPosition = (piece.color == WHITE) ? &whiteKing : &blackKing;
+            *kingPosition = end;
+        }
+        default: {
+            std::vector<Piece> *pieceList = (piece.color == WHITE) ? &whitePieces : &blackPieces;
+            for (int i = 0; i < pieceList->size(); ++i) {
+                if ((*pieceList)[i].position == start) {
+                    (*pieceList)[i].position = end;
+                    break;
+                }
+            }
+        }
+            break;
     }
 }
 
-void ChessBoard::setPiece(short position, Square piece) {
-    if (piece.color == WHITE) {
-        whitePieces.push_back({piece.type, position});
-    } else {
-        blackPieces.push_back({piece.type, position});
+void ChessBoard::setPiece(const short &position, const Square piece) {
+
+    switch (piece.type) {
+        case PAWN: {
+            std::vector<short> *pawnList = (piece.color == WHITE) ? &whitePawns : &blackPawns;
+            pawnList->push_back(position);
+        }
+            break;
+        case KING: {
+            short *kingPosition = (piece.color == WHITE) ? &whiteKing : &blackKing;
+            *kingPosition = position;
+        }
+        default: {
+            std::vector<Piece> *pieceList = (piece.color == WHITE) ? &whitePieces : &blackPieces;
+            pieceList->push_back({piece.type, position});
+        }
+            break;
     }
+
     squares[position] = piece;
 }
 
-void ChessBoard::removePiece(short position) {
-    if (squares[position].color == WHITE) {
-        for (int i = 0; whitePieces.size() > i; i++) {
-            if (whitePieces[i].position == position) {
-                whitePieces.erase(whitePieces.begin() + i);
+void ChessBoard::removePiece(const short &position) {
+
+    Square piece = squares[position];
+
+    if (piece.type == PAWN) {
+        std::vector<short> *pawnList = (piece.color == WHITE) ? &whitePawns : &blackPawns;
+        for (int i = 0; pawnList->size() > i; i++) {
+            if ((*pawnList)[i] == position) {
+                pawnList->erase(pawnList->begin() + i);
                 break;
             }
         }
     } else {
-        for (int i = 0; blackPieces.size() > i; i++) {
-            if (blackPieces[i].position == position) {
-                blackPieces.erase(blackPieces.begin() + i);
+        std::vector<Piece> *pieceList = (piece.color == WHITE) ? &whitePieces : &blackPieces;
+        for (int i = 0; pieceList->size() > i; i++) {
+            if ((*pieceList)[i].position == position) {
+                pieceList->erase(pieceList->begin() + i);
                 break;
             }
         }
@@ -184,7 +167,7 @@ void ChessBoard::removePiece(short position) {
     squares[position] = {EMPTY, WHITE};
 }
 
-void ChessBoard::updateCastlingRights(Move move) {
+void ChessBoard::updateCastlingRights(const Move &move) {
     if (move.player == WHITE) {
         if (castlingRights.whiteKingSide || castlingRights.whiteQueenSide) {
             if (move.start == 60) {
@@ -248,7 +231,7 @@ std::string ChessBoard::fen() {
     fen += " ";
 
     short fenPassant = enPassantSquare;
-    if(fenPassant < 31) fenPassant += 8; else fenPassant -= 8;
+    if (fenPassant < 31) fenPassant += 8; else fenPassant -= 8;
 
     fen += (enPassantSquare == -1) ? "-" : Util::positionToString(fenPassant);
     fen += " ";
@@ -265,9 +248,13 @@ void ChessBoard::setPosition(std::string fen) {
 
     whitePieces = std::vector<Piece>();
     blackPieces = std::vector<Piece>();
+    whitePawns = std::vector<short>();
+    blackPawns = std::vector<short>();
+    whiteKing = -1;
+    blackKing = -1;
     moveHistory = std::vector<Move>();
     castlingRightHistory = std::vector<CastlingRights>();
-    squares = std::array<Square,64>();
+    squares = std::array<Square, 64>();
     enPassantSquare = -1;
 
 

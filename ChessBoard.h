@@ -23,10 +23,16 @@ public:
     };
 
 
-    std::array<Square, 64> squares;
+    std::array<Square, 64> squares{};
 
     std::vector<Piece> whitePieces;
     std::vector<Piece> blackPieces;
+
+    std::vector<short> whitePawns;
+    std::vector<short> blackPawns;
+
+    short whiteKing{};
+    short blackKing{};
 
     Color sideToMove = WHITE;
     CastlingRights castlingRights{};
@@ -49,18 +55,18 @@ public:
 
     std::string fen();
 
-    void makeMove(Move move);
+    void makeMove(const Move &move);
 
     void unMakeMove();
 
 private:
-    void movePiece(short start, short end);
+    void movePiece(const short &start, const short &end);
 
-    void setPiece(short position, Square piece);
+    void setPiece(const short &position, const Square piece);
 
-    void removePiece(short position);
+    void removePiece(const short &position);
 
-    void updateCastlingRights(Move move);
+    void updateCastlingRights(const Move &move);
 
 };
 

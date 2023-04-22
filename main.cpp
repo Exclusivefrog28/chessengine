@@ -137,7 +137,7 @@ int main() {
 //    for (int i = 0; i < 11; ++i) {
 //        std::chrono::time_point start = std::chrono::high_resolution_clock::now();
 //        unsigned long long nodes =  MoveGenerator::perft(i, board);
-//        std::cout << i << " : " << nodes << " nodes in " << std::chrono::duration_cast<std::chrono::seconds>(std::chrono::high_resolution_clock::now() - start).count() << "s\n" << std::endl;
+//        std::cout << i << " : " << nodes << " nodes in " << std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - start).count() << "ms\n" << std::endl;
 //    }
 //    std::cout << board.fen() << std::endl;
 
