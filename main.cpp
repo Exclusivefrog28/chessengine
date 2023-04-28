@@ -5,6 +5,7 @@
 #include "Move.h"
 #include "Util.h"
 #include "MoveGenerator.h"
+#include "Evaluator.h"
 
 ChessBoard board;
 
@@ -111,6 +112,11 @@ char *getAttacks() {
     char *chararray = new char[length + 1];
     strcpy(chararray, attackedSquares.c_str());
     return chararray;
+}
+
+EMSCRIPTEN_KEEPALIVE
+int eval() {
+    return Evaluator::evaluate(board);
 }
 
 EMSCRIPTEN_KEEPALIVE
