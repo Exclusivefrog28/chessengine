@@ -3,7 +3,7 @@ project(ChessEngine)
 
 set(CMAKE_CXX_STANDARD 23)
 
-add_executable(ChessEngine main.cpp ChessBoard.cpp ChessBoard.h Move.h Piece.h Util.h MoveGenerator.cpp MoveGenerator.h Evaluator.cpp Evaluator.h)
+add_executable(ChessEngine main.cpp ChessBoard.cpp ChessBoard.h Move.h Piece.h Util.h MoveGenerator.cpp MoveGenerator.h Evaluator.cpp Evaluator.h EvaluationValues.h)
 
 set_target_properties(ChessEngine PROPERTIES
         LINK_FLAGS "-s WASM=1 -O3 -s ENVIRONMENT=web -s ALLOW_MEMORY_GROWTH -s EXPORTED_FUNCTIONS=['_main','_init','_move','_unmove','_listPieces','_getMoves','_getAttacks','_setFen','_runPerft','_eval'] -s EXPORTED_RUNTIME_METHODS=['ccall','cwrap']"
