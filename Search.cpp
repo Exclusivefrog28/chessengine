@@ -26,7 +26,7 @@ Moves::Move Search::search(ChessBoard &board, int depth) {
 }
 
 int Search::alphaBeta(ChessBoard &board, int depth, int alpha, int beta) {
-    if (depth == 0) return Evaluator::evaluate(board);
+    if (depth == 0) return quiescence(board, alpha, beta);
 
     std::vector<Move> moves = MoveGenerator::pseudoLegalMoves(board);
 
@@ -44,6 +44,33 @@ int Search::alphaBeta(ChessBoard &board, int depth, int alpha, int beta) {
             if (score > alpha)
                 alpha = score;
         }
+    }
+    return alpha;
+}
+
+int Search::quiescence(ChessBoard &board, int alpha, int beta) {
+    int stand_pat = Evaluator::evaluate(board);
+    if( stand_pat >= beta )
+        return beta;
+    if( alpha < stand_pat )
+        alpha = stand_pat;
+
+    std::vector<Move> moves = MoveGenerator::tacticalMoves(board);
+
+    for (const Move &move: moves){
+        board.makeMove(move);
+        if( MoveGenerator::inCheck(board, invertColor(board.sideToMove)) ){
+            board.unMakeMove();
+            continue;
+        }
+        int score = -quiescence(board, -beta, -alpha);
+        board.unMakeMove();
+
+        if( score >= beta )
+            return beta;
+        if( score > alpha )
+            alpha = score;
+
     }
     return alpha;
 }

@@ -97,11 +97,79 @@ std::vector<Moves::Move> MoveGenerator::pseudoLegalMoves(const ChessBoard &board
                     moves.push_back({pawnPosition, n, EMPTY, ENPASSANT, board.sideToMove});
             }
         }
-
     }
 
     return moves;
 }
+
+std::vector<Moves::Move> MoveGenerator::tacticalMoves(const ChessBoard &board) {
+
+    std::vector<Move> moves;
+
+    const std::vector<Piece> *pieceList = (board.sideToMove == WHITE) ? &board.whitePieces : &board.blackPieces;
+
+    for (const Piece &piece: *pieceList) {
+
+        for (short i = 0; i < OFFSETS[piece.type]; ++i) {
+            short n = piece.position;
+            while (true) {
+                n = MAILBOX[MAILBOX64[n] + OFFSET[piece.type][i]];
+                if (n == -1) break;
+                Square target = board.squares[n];
+                if (target.type != Pieces::EMPTY) {
+                    if (target.color != board.sideToMove)
+                        moves.push_back(
+                                {piece.position, n, EMPTY, static_cast<MoveFlag>(target.type), board.sideToMove});
+                    break;
+                }
+                if (!SLIDE[piece.type]) break;
+            }
+        }
+    }
+
+    const std::vector<short> *pawnList = (board.sideToMove == WHITE) ? &board.whitePawns : &board.blackPawns;
+
+    for (const short &pawnPosition: *pawnList) {
+        short sign = (board.sideToMove == WHITE) ? -1 : 1;
+
+        short pushTarget = pawnPosition + (sign * OFFSET[PAWN][0]);
+        if (board.squares[pushTarget].type == EMPTY) {
+            if (pushTarget <= 7 || pushTarget >= 56) {
+                moves.push_back({pawnPosition, pushTarget, KNIGHT, QUIET, board.sideToMove});
+                moves.push_back({pawnPosition, pushTarget, BISHOP, QUIET, board.sideToMove});
+                moves.push_back({pawnPosition, pushTarget, ROOK, QUIET, board.sideToMove});
+                moves.push_back({pawnPosition, pushTarget, QUEEN, QUIET, board.sideToMove});
+            }
+            for (short i = 1; i < 3; ++i) {
+                short n = MAILBOX[MAILBOX64[pawnPosition] + (sign * OFFSET[PAWN][i])];
+                if (n == -1) continue;
+                Square target = board.squares[n];
+                if (target.type != EMPTY && target.color != board.sideToMove) {
+                    if (n <= 7 || n >= 56) {
+                        moves.push_back(
+                                {pawnPosition, n, KNIGHT, static_cast<MoveFlag>(target.type), board.sideToMove});
+                        moves.push_back(
+                                {pawnPosition, n, BISHOP, static_cast<MoveFlag>(target.type), board.sideToMove});
+                        moves.push_back(
+                                {pawnPosition, n, ROOK, static_cast<MoveFlag>(target.type), board.sideToMove});
+                        moves.push_back(
+                                {pawnPosition, n, QUEEN, static_cast<MoveFlag>(target.type), board.sideToMove});
+                    } else
+                        moves.push_back(
+                                {pawnPosition, n, EMPTY, static_cast<MoveFlag>(target.type), board.sideToMove});
+                }
+                if (board.enPassantSquare != -1) {
+                    short enPassantTarget = n - (sign * OFFSET[PAWN][0]);
+                    if (enPassantTarget == board.enPassantSquare)
+                        moves.push_back({pawnPosition, n, EMPTY, ENPASSANT, board.sideToMove});
+                }
+            }
+        }
+    }
+
+    return moves;
+}
+
 
 bool MoveGenerator::isSquareAttacked(const ChessBoard &board, short square, Color color) {
     short sign = (color == WHITE) ? -1 : 1;
@@ -146,7 +214,7 @@ bool MoveGenerator::isSquareAttacked(const ChessBoard &board, short square, Colo
 }
 
 bool MoveGenerator::inCheck(const ChessBoard &board, Color color) {
-    short kingPosition = (color == Pieces::WHITE) ? board.whiteKing: board.blackKing;
+    short kingPosition = (color == Pieces::WHITE) ? board.whiteKing : board.blackKing;
 
     return MoveGenerator::isSquareAttacked(board, kingPosition, color);
 }

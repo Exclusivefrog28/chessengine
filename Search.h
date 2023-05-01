@@ -13,6 +13,7 @@ public:
 
 private:
     static int alphaBeta(ChessBoard& board, int depth, int alpha, int beta);
+    static int quiescence(ChessBoard& board, int alpha, int beta);
 };
 
 
