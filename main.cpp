@@ -133,7 +133,7 @@ char *getBestMove(int depth) {
     bestMoveJSON += std::to_string(bestMove.flag);
     bestMoveJSON += R"(","player":")";
     bestMoveJSON += std::to_string(bestMove.player);
-    bestMoveJSON += "\"})";
+    bestMoveJSON += "\"}";
     const int length = bestMoveJSON.length();
     char *chararray = new char[length + 1];
     strcpy(chararray, bestMoveJSON.c_str());
