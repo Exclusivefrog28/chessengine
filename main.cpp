@@ -6,6 +6,7 @@
 #include "Util.h"
 #include "MoveGenerator.h"
 #include "Evaluator.h"
+#include "Search.h"
 
 ChessBoard board;
 
@@ -120,13 +121,34 @@ int eval() {
 }
 
 EMSCRIPTEN_KEEPALIVE
+char *getBestMove(int depth) {
+    Move bestMove = Search::search(board, depth);
+    std::string bestMoveJSON = R"({"start":")";
+    bestMoveJSON += Util::positionToString(bestMove.start);
+    bestMoveJSON += R"(","end":")";
+    bestMoveJSON += Util::positionToString(bestMove.end);
+    bestMoveJSON += R"(","promotionType":")";
+    bestMoveJSON += std::to_string(bestMove.promotionType);
+    bestMoveJSON += R"(","flag":")";
+    bestMoveJSON += std::to_string(bestMove.flag);
+    bestMoveJSON += R"(","player":")";
+    bestMoveJSON += std::to_string(bestMove.player);
+    bestMoveJSON += "\"})";
+    const int length = bestMoveJSON.length();
+    char *chararray = new char[length + 1];
+    strcpy(chararray, bestMoveJSON.c_str());
+    return chararray;
+}
+
+
+EMSCRIPTEN_KEEPALIVE
 void setFen(char *fen) {
     std::string fenString(fen);
     board.setPosition(fenString);
 }
 
 EMSCRIPTEN_KEEPALIVE
-int runPerft(int depth, const char* fen) {
+int runPerft(int depth, const char *fen) {
     ChessBoard perftBoard;
     perftBoard.setPosition(fen);
 
@@ -135,17 +157,9 @@ int runPerft(int depth, const char* fen) {
 
 EMSCRIPTEN_KEEPALIVE
 int main() {
-
-//    board.setPosition("r3k2r/p1ppqpb1/bn2pnp1/3PN3/1p2P3/2N2Q1p/PPPBBPPP/R3K2R w KQkq - 0 1");
 //
-//    std::cout << board.fen() << std::endl;
-//
-//    for (int i = 0; i < 11; ++i) {
-//        std::chrono::time_point start = std::chrono::high_resolution_clock::now();
-//        unsigned long long nodes =  MoveGenerator::perft(i, board);
-//        std::cout << i << " : " << nodes << " nodes in " << std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::high_resolution_clock::now() - start).count() << "ms\n" << std::endl;
-//    }
-//    std::cout << board.fen() << std::endl;
+//    init();
+//    Search::search(board, 3);
 
     return 0;
 }
