@@ -5,7 +5,10 @@
 Moves::Move Search::search(ChessBoard &board, int depth) {
 
     std::vector<Move> moves = MoveGenerator::pseudoLegalMoves(board);
-    int bestScore = INT32_MIN + 1;
+
+    int alpha = INT32_MIN + 1;
+    int beta = INT32_MAX;
+
     Move bestMove{};
     for (Move &move: moves) {
         board.makeMove(move);
@@ -13,12 +16,12 @@ Moves::Move Search::search(ChessBoard &board, int depth) {
             board.unMakeMove();
             continue;
         }
-        int score = -alphaBeta(board, depth - 1, INT32_MIN + 1, INT32_MAX);
+        int score = -alphaBeta(board, depth - 1, alpha, beta);
         board.unMakeMove();
 
-        if (score > bestScore) {
-            bestScore = score;
+        if (score > alpha){
             bestMove = move;
+            alpha = score;
         }
     }
 
