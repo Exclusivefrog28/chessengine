@@ -157,9 +157,6 @@ int runPerft(int depth, const char *fen) {
 
 EMSCRIPTEN_KEEPALIVE
 int main() {
-//
-//    init();
-//    Search::search(board, 3);
 
     return 0;
 }

@@ -28,6 +28,13 @@ namespace Moves {
         Color player;
     };
 
+    const Move NULL_MOVE = Move{0, 0, Pieces::EMPTY, QUIET, Color::WHITE};
+
+    static bool operator==(const Move& left, const Move& rigth)
+    {
+        return (left.start == rigth.start && left.end == rigth.end && left.promotionType == rigth.promotionType && left.flag == rigth.flag && left.player == rigth.player);
+    }
+
     const short MAILBOX[120] = {
             -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
             -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
