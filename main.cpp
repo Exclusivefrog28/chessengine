@@ -65,36 +65,46 @@ char *listPieces() {
 }
 
 EMSCRIPTEN_KEEPALIVE
-char *getMoves(int position) {
-    std::string selectedMoves;
+char *getMoves() {
+    std::string string;
     std::vector<Move> moves = MoveGenerator::pseudoLegalMoves(board);
 
     bool empty = true;
 
-    selectedMoves += "[";
+    string += "{";
+    string += R"("moves" : [)";
     for (const Move move: moves) {
-        if (move.start == position && MoveGenerator::isLegalMove(board, move)) {
+        if (MoveGenerator::isLegalMove(board, move)) {
             empty = false;
-            selectedMoves += "{";
-            selectedMoves += R"("start":")";
-            selectedMoves += Util::positionToString(move.start);
-            selectedMoves += R"(","end":")";
-            selectedMoves += Util::positionToString(move.end);
-            selectedMoves += R"(","promotionType":")";
-            selectedMoves += std::to_string(move.promotionType);
-            selectedMoves += R"(","flag":")";
-            selectedMoves += std::to_string(move.flag);
-            selectedMoves += R"(","player":")";
-            selectedMoves += std::to_string(move.player);
-            selectedMoves += "\"},";
+            string += "{";
+            string += R"("start":")";
+            string += Util::positionToString(move.start);
+            string += R"(","end":")";
+            string += Util::positionToString(move.end);
+            string += R"(","promotionType":")";
+            string += std::to_string(move.promotionType);
+            string += R"(","flag":")";
+            string += std::to_string(move.flag);
+            string += R"(","player":")";
+            string += std::to_string(move.player);
+            string += "\"},";
         }
     }
-    if (!empty) selectedMoves.pop_back();
-    selectedMoves += "]";
+    if (!empty) {
+        string.pop_back();
+    }
+    string += R"(],"state":)";
 
-    const int length = selectedMoves.length();
+    if (empty) {
+        if (MoveGenerator::inCheck(board, board.sideToMove)) string += R"("checkmate")";
+        else string += R"("stalemate")";
+    } else string += R"("normal")";
+
+    string += "}";
+
+    const int length = string.length();
     char *chararray = new char[length + 1];
-    strcpy(chararray, selectedMoves.c_str());
+    strcpy(chararray, string.c_str());
     return chararray;
 }
 

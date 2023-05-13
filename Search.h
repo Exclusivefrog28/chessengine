@@ -20,6 +20,7 @@ public:
     static Moves::Move search(ChessBoard& board, int depth);
 
 private:
+
     int alphaBeta(int depth, int alpha, int beta, int ply, std::vector<Move>& pv);
     int quiescence(int alpha, int beta, int ply, std::vector<Move>& pv);
     int scoreMove(const Move& move, int ply) const;

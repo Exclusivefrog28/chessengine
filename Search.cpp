@@ -2,6 +2,8 @@
 #include "Evaluator.h"
 #include "MoveGenerator.h"
 
+#define MATE_SCORE 10000
+
 Moves::Move Search::search(ChessBoard &board, int depth) {
 
     int alpha = INT32_MIN + 1;
@@ -24,20 +26,28 @@ Moves::Move Search::search(ChessBoard &board, int depth) {
 int Search::alphaBeta(int depth, int alpha, int beta, int ply, std::vector<Move> &pv) {
     if (depth == 0) return quiescence(alpha, beta, ply, pv);
 
+    alpha = std::max(alpha, -MATE_SCORE + ply);
+    beta = std::min(beta, MATE_SCORE - ply);
+    if (alpha >= beta) return alpha;
+
     std::vector<Move> moves = MoveGenerator::pseudoLegalMoves(board);
+
+    bool hasLegalMoves = false;
+
     std::sort(moves.begin(), moves.end(), [this, ply](const Move &a, const Move &b) {
         return scoreMove(a, ply + 1) > scoreMove(b, ply + 1);
     });
 
     for (const Move &move: moves) {
-        std::vector<Move> childPV;
 
         board.makeMove(move);
-
         if (MoveGenerator::inCheck(board, invertColor(board.sideToMove))) {
             board.unMakeMove();
             continue;
         }
+
+        std::vector<Move> childPV;
+        hasLegalMoves = true;
 
         int score = -alphaBeta(depth - 1, -beta, -alpha, ply + 1, childPV);
         board.unMakeMove();
@@ -53,9 +63,12 @@ int Search::alphaBeta(int depth, int alpha, int beta, int ply, std::vector<Move>
             pv.push_back(move);
             std::copy(childPV.begin(), childPV.end(), back_inserter(pv));
         }
-
-
     }
+    if (!hasLegalMoves) {
+        if(MoveGenerator::inCheck(board, board.sideToMove)) return -(MATE_SCORE-ply);
+        else return 0;
+    }
+
     return alpha;
 }
 
