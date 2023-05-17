@@ -1,6 +1,8 @@
 #include "ChessBoard.h"
+#include "HashCodes.h"
 
 void ChessBoard::setStartingPosition() {
+    hashCode = HashCodes::instance().initialCode;
     setPosition("rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
 }
 
@@ -21,8 +23,14 @@ std::ostream &operator<<(std::ostream &os, const ChessBoard &board) {
 void ChessBoard::makeMove(const Move &move) {
 
     enPassantHistory.push_back(enPassantSquare);
-    if (move.flag == ENPASSANT) removePiece(enPassantSquare);
-    enPassantSquare = -1;
+    castlingRightHistory.push_back(castlingRights);
+    if (move.flag == ENPASSANT) {
+        removePiece(enPassantSquare);
+    }
+    if(enPassantSquare != -1){
+        hashCode ^= HashCodes::instance().enPassantFileCode[enPassantSquare / 8];
+        enPassantSquare = -1;
+    }
 
     if (squares[move.start].type == PAWN || (move.flag >= 1 && move.flag <= 5)) halfMoveClock = 0;
     else halfMoveClock++;
@@ -31,13 +39,14 @@ void ChessBoard::makeMove(const Move &move) {
 
     if (move.promotionType != EMPTY) {
         removePiece(move.start);
-        removePiece(move.end);
+        if (squares[move.end].type != EMPTY) removePiece(move.end);
         setPiece(move.end, {move.promotionType, move.player});
     } else {
         movePiece(move.start, move.end);
 
         if (move.flag == DOUBLEPAWNPUSH) {
             enPassantSquare = move.end;
+            hashCode ^= HashCodes::instance().enPassantFileCode[move.end / 8];
         } else if (move.flag == CASTLEKINGSIDE) {
             movePiece(move.end + 1, move.end - 1);
         } else if (move.flag == CASTLEQUEENSIDE) {
@@ -46,16 +55,32 @@ void ChessBoard::makeMove(const Move &move) {
     }
 
     sideToMove = Pieces::invertColor(sideToMove);
+    hashCode ^= HashCodes::instance().blackToMoveCode;
+
     Move m = move;
     moveHistory.push_back(m);
-    castlingRightHistory.push_back(castlingRights);
+
+    hashCode ^= HashCodes::instance().castlingRightCodes[castlingRights.blackKingSide * 8 + castlingRights.blackQueenSide * 4 +
+                                              castlingRights.whiteKingSide * 2 + castlingRights.whiteQueenSide];
     updateCastlingRights(move);
+    hashCode ^= HashCodes::instance().castlingRightCodes[castlingRights.blackKingSide * 8 + castlingRights.blackQueenSide * 4 +
+                                              castlingRights.whiteKingSide * 2 + castlingRights.whiteQueenSide];
 }
 
 void ChessBoard::unMakeMove() {
+    if (moveHistory.empty()) return;
+
+    if (enPassantSquare != -1) hashCode ^= HashCodes::instance().enPassantFileCode[enPassantSquare / 8];
+    hashCode = hashCode ^
+               HashCodes::instance().castlingRightCodes[castlingRights.blackKingSide * 8 + castlingRights.blackQueenSide * 4 +
+                                             castlingRights.whiteKingSide * 2 + castlingRights.whiteQueenSide];
     Move lastMove = moveHistory[moveHistory.size() - 1];
     castlingRights = castlingRightHistory[castlingRightHistory.size() - 1];
     enPassantSquare = enPassantHistory[enPassantHistory.size() - 1];
+    if (enPassantSquare != -1) hashCode ^= HashCodes::instance().enPassantFileCode[enPassantSquare / 8];
+    hashCode ^= HashCodes::instance().castlingRightCodes[castlingRights.blackKingSide * 8 + castlingRights.blackQueenSide * 4 +
+                                              castlingRights.whiteKingSide * 2 + castlingRights.whiteQueenSide];
+
 
     moveHistory.pop_back();
     castlingRightHistory.pop_back();
@@ -72,8 +97,7 @@ void ChessBoard::unMakeMove() {
         if (lastMove.flag > 0 && lastMove.flag < 6) {
             setPiece(lastMove.end, {static_cast<Type>(lastMove.flag), Pieces::invertColor(lastMove.player)});
         } else if (lastMove.flag == ENPASSANT) {
-            short passedPawnPosition = (lastMove.player == WHITE) ? lastMove.end + 8 : lastMove.end - 8;
-            setPiece(passedPawnPosition, {PAWN, Pieces::invertColor(lastMove.player)});
+            setPiece(enPassantSquare, {PAWN, Pieces::invertColor(lastMove.player)});
         } else if (lastMove.flag == CASTLEKINGSIDE) {
             movePiece(lastMove.end - 1, lastMove.end + 1);
         } else if (lastMove.flag == CASTLEQUEENSIDE) {
@@ -82,9 +106,10 @@ void ChessBoard::unMakeMove() {
     }
 
     sideToMove = Pieces::invertColor(sideToMove);
+    hashCode ^= HashCodes::instance().blackToMoveCode;
 }
 
-void ChessBoard::movePiece(const short &start, const short &end) {
+void ChessBoard::movePiece(short start, short end) {
     if (squares[end].type != EMPTY) removePiece(end);
 
     Square piece = squares[start];
@@ -95,9 +120,9 @@ void ChessBoard::movePiece(const short &start, const short &end) {
     switch (piece.type) {
         case PAWN: {
             std::vector<short> *pawnList = (piece.color == WHITE) ? &whitePawns : &blackPawns;
-            for (int i = 0; i < pawnList->size(); ++i) {
-                if ((*pawnList)[i] == start) {
-                    (*pawnList)[i] = end;
+            for (short &i: *pawnList) {
+                if (i == start) {
+                    i = end;
                     break;
                 }
             }
@@ -109,18 +134,21 @@ void ChessBoard::movePiece(const short &start, const short &end) {
         }
         default: {
             std::vector<Piece> *pieceList = (piece.color == WHITE) ? &whitePieces : &blackPieces;
-            for (int i = 0; i < pieceList->size(); ++i) {
-                if ((*pieceList)[i].position == start) {
-                    (*pieceList)[i].position = end;
+            for (Piece &i: *pieceList) {
+                if (i.position == start) {
+                    i.position = end;
                     break;
                 }
             }
         }
             break;
     }
+
+    hashCode ^= HashCodes::instance().pieceCode(piece.type, piece.color, start);
+    hashCode ^= HashCodes::instance().pieceCode(piece.type, piece.color, end);
 }
 
-void ChessBoard::setPiece(const short &position, const Square piece) {
+void ChessBoard::setPiece(short position, const Square &piece) {
 
     switch (piece.type) {
         case PAWN: {
@@ -139,10 +167,11 @@ void ChessBoard::setPiece(const short &position, const Square piece) {
             break;
     }
 
+    hashCode ^= HashCodes::instance().pieceCode(piece.type, piece.color, position);
     squares[position] = piece;
 }
 
-void ChessBoard::removePiece(const short &position) {
+void ChessBoard::removePiece(short position) {
 
     Square piece = squares[position];
 
@@ -164,6 +193,7 @@ void ChessBoard::removePiece(const short &position) {
         }
     }
 
+    hashCode ^= HashCodes::instance().pieceCode(piece.type, piece.color, position);
     squares[position] = {EMPTY, WHITE};
 }
 
@@ -196,7 +226,7 @@ void ChessBoard::updateCastlingRights(const Move &move) {
 }
 
 std::string ChessBoard::fen() {
-    std::string fen = "";
+    std::string fen;
     for (int i = 0; i < 8; ++i) {
         int emptyspaces = 0;
         for (int j = 0; j < 8; ++j) {

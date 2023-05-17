@@ -14,6 +14,7 @@ extern "C" {
 EMSCRIPTEN_KEEPALIVE
 void init() {
     board.setStartingPosition();
+    printf("%ld\n", board.hashCode);
 }
 EMSCRIPTEN_KEEPALIVE
 char *move(int start, int end, int flag, int promotionType, int player) {
@@ -24,6 +25,7 @@ char *move(int start, int end, int flag, int promotionType, int player) {
     const int length = fen.length();
     char *chararray = new char[length + 1];
     strcpy(chararray, fen.c_str());
+    printf("%ld\n", board.hashCode);
     return chararray;
 }
 
@@ -35,6 +37,7 @@ char *unmove() {
     const int length = fen.length();
     char *chararray = new char[length + 1];
     strcpy(chararray, fen.c_str());
+    printf("%ld\n", board.hashCode);
     return chararray;
 }
 
@@ -167,7 +170,6 @@ int runPerft(int depth, const char *fen) {
 
 EMSCRIPTEN_KEEPALIVE
 int main() {
-
     return 0;
 }
 }

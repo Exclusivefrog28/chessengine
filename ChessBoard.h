@@ -45,6 +45,8 @@ public:
     std::vector<CastlingRights> castlingRightHistory;
     std::vector<short> enPassantHistory;
 
+    long int hashCode;
+
     ChessBoard();
 
     void setStartingPosition();
@@ -60,11 +62,11 @@ public:
     void unMakeMove();
 
 private:
-    void movePiece(const short &start, const short &end);
+    void movePiece(short start, short end);
 
-    void setPiece(const short &position, const Square piece);
+    void setPiece(short position,const Square &piece);
 
-    void removePiece(const short &position);
+    void removePiece(short position);
 
     void updateCastlingRights(const Move &move);
 
