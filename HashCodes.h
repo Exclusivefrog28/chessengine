@@ -5,9 +5,6 @@
 #include <random>
 
 class HashCodes {
-private:
-    static HashCodes* inst;
-
 public:
     long int initialCode;
     std::array<long int, 12 * 64> pieceCodes;
@@ -34,19 +31,9 @@ public:
         }
     }
 
-    long int pieceCode(Type type, Color color, short position) {
+    long int pieceCode(Pieces::Type type, Pieces::Color color, short position) {
         return pieceCodes[((type - 1) * 64) + (color * 6*64) + position];
     }
-
-    static HashCodes instance() {
-        if(inst == nullptr){
-            inst = new HashCodes();
-            inst->initialize();
-        }
-        return *inst;
-    }
 };
-
-HashCodes* HashCodes::inst = nullptr;
 
 #endif //CHESSENGINE_HASHCODES_H

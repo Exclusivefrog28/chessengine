@@ -7,12 +7,14 @@
 #include "MoveGenerator.h"
 #include "Evaluator.h"
 #include "Search.h"
+#include "TranspositionTable.h"
 
 ChessBoard board;
 
 extern "C" {
 EMSCRIPTEN_KEEPALIVE
 void init() {
+    board.hashCodes.initialize();
     board.setStartingPosition();
     printf("%ld\n", board.hashCode);
 }

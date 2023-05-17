@@ -1,8 +1,9 @@
 #include "Search.h"
 #include "Evaluator.h"
 #include "MoveGenerator.h"
+#include "TranspositionTable.h"
 
-#define MATE_SCORE 10000
+#define MATE_SCORE 65536
 
 Moves::Move Search::search(ChessBoard &board, int depth) {
 
@@ -26,6 +27,29 @@ Moves::Move Search::search(ChessBoard &board, int depth) {
 int Search::alphaBeta(int depth, int alpha, int beta, int ply, std::vector<Move> &pv) {
     if (depth == 0) return quiescence(alpha, beta, ply, pv);
 
+    if (TranspositionTable::contains(board.hashCode)) {
+        TranspositionTable::Entry entry = TranspositionTable::getEntry(board.hashCode, ply);
+        if (entry.depth >= depth) {
+            if (entry.nodeType == TranspositionTable::EXACT) {
+                pv.clear();
+                pv.push_back(entry.bestMove);
+                if(entry.score >= beta) return beta;
+                if(entry.score <= alpha) return alpha;
+                return entry.score;
+            }
+            if (entry.nodeType == TranspositionTable::UPPERBOUND && entry.score <= alpha) {
+                pv.clear();
+                pv.push_back(entry.bestMove);
+                return alpha;
+            }
+            if (entry.nodeType == TranspositionTable::LOWERBOUND && entry.score >= beta) {
+                pv.clear();
+                pv.push_back(entry.bestMove);
+                return beta;
+            }
+        }
+    }
+
     alpha = std::max(alpha, -MATE_SCORE + ply);
     beta = std::min(beta, MATE_SCORE - ply);
     if (alpha >= beta) return alpha;
@@ -37,6 +61,9 @@ int Search::alphaBeta(int depth, int alpha, int beta, int ply, std::vector<Move>
     std::sort(moves.begin(), moves.end(), [this, ply](const Move &a, const Move &b) {
         return scoreMove(a, ply + 1) > scoreMove(b, ply + 1);
     });
+
+    TranspositionTable::NodeType nodeType = TranspositionTable::UPPERBOUND;
+    Move bestMove{};
 
     for (const Move &move: moves) {
 
@@ -54,10 +81,14 @@ int Search::alphaBeta(int depth, int alpha, int beta, int ply, std::vector<Move>
 
         if (score >= beta) {
             storeKillerMove(move, ply);
+            TranspositionTable::setEntry(board.hashCode,
+                                         {board.hashCode, move, depth, beta, TranspositionTable::LOWERBOUND});
             return beta;
         }
         if (score > alpha) {
             alpha = score;
+            bestMove = move;
+            nodeType = TranspositionTable::EXACT;
 
             pv.clear();
             pv.push_back(move);
@@ -65,8 +96,10 @@ int Search::alphaBeta(int depth, int alpha, int beta, int ply, std::vector<Move>
         }
     }
     if (!hasLegalMoves) {
-        if(MoveGenerator::inCheck(board, board.sideToMove)) return -(MATE_SCORE-ply);
+        if (MoveGenerator::inCheck(board, board.sideToMove)) return -(MATE_SCORE - ply);
         else return 0;
+    } else {
+        TranspositionTable::setEntry(board.hashCode, {board.hashCode, bestMove, depth, alpha, nodeType});
     }
 
     return alpha;

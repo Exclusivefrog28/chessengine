@@ -7,6 +7,7 @@
 #include "Move.h"
 #include "Piece.h"
 #include "Util.h"
+#include "HashCodes.h"
 
 using namespace Pieces;
 using namespace Moves;
@@ -45,7 +46,8 @@ public:
     std::vector<CastlingRights> castlingRightHistory;
     std::vector<short> enPassantHistory;
 
-    long int hashCode;
+    long int hashCode{};
+    HashCodes hashCodes{};
 
     ChessBoard();
 
