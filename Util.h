@@ -9,8 +9,11 @@ namespace Util {
     using namespace Pieces;
 
     static std::string pieceToString(Type type, Color color) {
-        std::string piece = "p";
+        std::string piece;
         switch (type) {
+            case PAWN:
+                piece = 'p';
+                break;
             case KNIGHT:
                 piece = 'n';
                 break;
@@ -25,6 +28,8 @@ namespace Util {
                 break;
             case KING:
                 piece = 'k';
+                break;
+            case EMPTY:
                 break;
         }
         if (color == WHITE) std::transform(piece.begin(), piece.end(), piece.begin(), ::toupper);

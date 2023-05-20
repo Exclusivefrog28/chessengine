@@ -10,11 +10,13 @@ Moves::Move Search::search(ChessBoard &board, int depth) {
     int alpha = INT32_MIN + 1;
     int beta = INT32_MAX;
 
-    Search search = Search(depth, board);
+    Search search = Search(board, depth);
 
-    search.principalVariation.clear();
-
-    search.alphaBeta(depth, alpha, beta, 0, search.principalVariation);
+    for (int i = 1; i <= depth; ++i) {
+        if(i > 1) search.lastPV = search.principalVariation;
+        search.principalVariation.clear();
+        search.alphaBeta(i, alpha, beta, 0, search.principalVariation);
+    }
 
     for (const Move &move: search.principalVariation) {
         printf(" %s%s", Util::positionToString(move.start).c_str(), Util::positionToString(move.end).c_str());
@@ -25,27 +27,28 @@ Moves::Move Search::search(ChessBoard &board, int depth) {
 }
 
 int Search::alphaBeta(int depth, int alpha, int beta, int ply, std::vector<Move> &pv) {
-    if (depth == 0) return quiescence(alpha, beta, ply, pv);
+    if (depth == 0) return quiesce(alpha, beta, ply, pv);
+
+    Move* hashMove = nullptr;
 
     if (TranspositionTable::contains(board.hashCode)) {
         TranspositionTable::Entry entry = TranspositionTable::getEntry(board.hashCode, ply);
         if (entry.depth >= depth) {
-            if (entry.nodeType == TranspositionTable::EXACT) {
-                pv.clear();
-                pv.push_back(entry.bestMove);
-                if(entry.score >= beta) return beta;
-                if(entry.score <= alpha) return alpha;
-                return entry.score;
-            }
-            if (entry.nodeType == TranspositionTable::UPPERBOUND && entry.score <= alpha) {
-                pv.clear();
-                pv.push_back(entry.bestMove);
-                return alpha;
-            }
-            if (entry.nodeType == TranspositionTable::LOWERBOUND && entry.score >= beta) {
-                pv.clear();
-                pv.push_back(entry.bestMove);
-                return beta;
+            switch (entry.nodeType) {
+                case TranspositionTable::EXACT:
+                    pv.push_back(entry.bestMove);
+                    return entry.score;
+                case TranspositionTable::UPPERBOUND:
+                    if (entry.score <= alpha) return entry.score;
+                    beta = std::min(beta, entry.score);
+                    break;
+                case TranspositionTable::LOWERBOUND:
+                    if (entry.score >= beta) {
+                        pv.push_back(entry.bestMove);
+                        return entry.score;
+                    }
+                    hashMove = &entry.bestMove;
+                    alpha = std::max(alpha, entry.score);
             }
         }
     }
@@ -54,18 +57,15 @@ int Search::alphaBeta(int depth, int alpha, int beta, int ply, std::vector<Move>
     beta = std::min(beta, MATE_SCORE - ply);
     if (alpha >= beta) return alpha;
 
-    std::vector<Move> moves = MoveGenerator::pseudoLegalMoves(board);
+    std::vector<ScoredMove> moves = scoreMoves(MoveGenerator::pseudoLegalMoves(board), ply, hashMove);
 
     bool hasLegalMoves = false;
-
-    std::sort(moves.begin(), moves.end(), [this, ply](const Move &a, const Move &b) {
-        return scoreMove(a, ply + 1) > scoreMove(b, ply + 1);
-    });
 
     TranspositionTable::NodeType nodeType = TranspositionTable::UPPERBOUND;
     Move bestMove{};
 
-    for (const Move &move: moves) {
+    for (int i = 0; i < moves.size(); i++) {
+        Move move = selectMove(moves, i);
 
         board.makeMove(move);
         if (MoveGenerator::inCheck(board, invertColor(board.sideToMove))) {
@@ -80,10 +80,14 @@ int Search::alphaBeta(int depth, int alpha, int beta, int ply, std::vector<Move>
         board.unMakeMove();
 
         if (score >= beta) {
-            storeKillerMove(move, ply);
+            if (move.flag == 0 || move.flag >= 7){
+                storeKillerMove(move, ply);
+                history[board.sideToMove][move.start][move.end] += depth * depth;
+            }
+
             TranspositionTable::setEntry(board.hashCode,
-                                         {board.hashCode, move, depth, beta, TranspositionTable::LOWERBOUND});
-            return beta;
+                                         {board.hashCode, move, depth, score, TranspositionTable::LOWERBOUND});
+            return score;
         }
         if (score > alpha) {
             alpha = score;
@@ -105,7 +109,7 @@ int Search::alphaBeta(int depth, int alpha, int beta, int ply, std::vector<Move>
     return alpha;
 }
 
-int Search::quiescence(int alpha, int beta, int ply, std::vector<Move> &pv) {
+int Search::quiesce(int alpha, int beta, int ply, std::vector<Move> &pv) {
     int stand_pat = Evaluator::evaluate(board);
     if (stand_pat >= beta)
         return beta;
@@ -115,24 +119,23 @@ int Search::quiescence(int alpha, int beta, int ply, std::vector<Move> &pv) {
         return alpha;
     }
 
+    std::vector<ScoredMove> moves = scoreTacticalMoves(MoveGenerator::tacticalMoves(board));
 
-    std::vector<Move> moves = MoveGenerator::tacticalMoves(board);
-    std::sort(moves.begin(), moves.end(), [this](const Move &a, const Move &b) {
-        return scoreMove(a, 0) > scoreMove(b, 0);
-    });
+    for (int i = 0; i < moves.size(); i++) {
+        Move move = selectMove(moves, i);
 
-    for (const Move &move: moves) {
         std::vector<Move> childPV;
         board.makeMove(move);
         if (MoveGenerator::inCheck(board, invertColor(board.sideToMove))) {
             board.unMakeMove();
             continue;
         }
-        int score = -quiescence(-beta, -alpha, ply + 1, childPV);
+        int score = -quiesce(-beta, -alpha, ply + 1, childPV);
         board.unMakeMove();
 
-        if (score >= beta)
-            return beta;
+        if (score >= beta) {
+            return score;
+        }
         if (score > alpha) {
             alpha = score;
             pv.clear();
@@ -143,61 +146,98 @@ int Search::quiescence(int alpha, int beta, int ply, std::vector<Move> &pv) {
     return alpha;
 }
 
-int Search::scoreMove(const Move &move, int ply) const {
+std::vector<ScoredMove> Search::scoreMoves(const std::vector<Move> &moves, int ply, Move* hashMove) const {
 
-    Square piece = board.squares[move.start];
+    std::vector<ScoredMove> scoredMoves;
 
-    int score = 0;
+    for (const Move &move: moves) {
+        int score = 0;
+        int captureScore = 0;
 
-    if (move.promotionType != 0) {
-        score += EvaluationValues::mg_value[move.promotionType - 1] - EvaluationValues::mg_value[0];
-    } else if (move.flag == 0) {
-        if (move == killerMoves[ply][0] || move == killerMoves[ply][1] || move == killerMoves[ply][2])
-            score += 10;
+        if (lastPV.size() - 1 <= ply && lastPV[ply] == move) score = 1 << 31;
+
+        else if (hashMove != nullptr && move == *hashMove) score = 1 << 30;
+
+        else if (move.promotionType != 0) {
+            score = EvaluationValues::mg_value[move.promotionType - 1] - EvaluationValues::mg_value[0];
+        } else if (move.flag == 0 || move.flag >= 7) {
+            if (move == killerMoves[ply][0] || move == killerMoves[ply][1])
+                score = 1 << 14;
+            else score = history[board.sideToMove][move.start][move.end];
+        }
+        else {
+            if(move.flag == 6) score = 1 << 16;
+            else {
+                int agressor = EvaluationValues::mg_value[board.squares[move.start].type - 1];
+                int victim = EvaluationValues::mg_value[move.flag - 1];
+                captureScore += victim - agressor;
+                if (captureScore == 0) captureScore = 1;
+                if (captureScore > 0) captureScore <<= 16;
+                score += captureScore;
+            }
+        }
+
+        scoredMoves.push_back({move, score});
     }
-
-    if (move.flag >= 1 && move.flag <= 5) {
-        int agressor = EvaluationValues::mg_value[piece.type - 1];
-        int victim = EvaluationValues::mg_value[move.flag - 1];
-        score += victim - agressor;
-    }
-
-    return score;
+    return scoredMoves;
 }
 
-Search::Search(int depth, ChessBoard &board) : board(board) {
-    killerMoves = new std::array<Move, 3>[depth];
+std::vector<ScoredMove> Search::scoreTacticalMoves(const std::vector<Move> &moves) const {
+
+    std::vector<ScoredMove> scoredMoves;
+
+    for (const Move &move: moves) {
+        int score;
+        if (move.promotionType != 0)
+            score = EvaluationValues::mg_value[move.promotionType - 1] - EvaluationValues::mg_value[0];
+        else
+            score = EvaluationValues::mg_value[move.flag - 1] -
+                    EvaluationValues::mg_value[board.squares[move.start].type - 1];
+
+        scoredMoves.push_back({move, score});
+    }
+    return scoredMoves;
+}
+
+Move Search::selectMove(std::vector<ScoredMove> &moves, int index) const {
+
+    int selectedIndex = index;
+    ScoredMove selected = moves[selectedIndex];
+    int maxScore = selected.score;
+
+    for (int i = index + 1; i < moves.size(); ++i) {
+        if (moves[i].score > maxScore) {
+            selectedIndex = i;
+            selected = moves[selectedIndex];
+            maxScore = selected.score;
+        }
+    }
+    moves[selectedIndex] = moves[index];
+    moves[index] = selected;
+
+    return selected.move;
+}
+
+void Search::storeKillerMove(Move move, int ply) {
+    if ((move.flag == 0 || move.flag >= 7) && move.promotionType == 0) {
+
+        if (killerMoves[ply][0] == move) return;
+        if (killerMoves[ply][1] == move) return;
+
+        if (killerMoveIndexOne || killerMoves[ply][0] == NULL_MOVE) {
+            killerMoves[ply][0] = move;
+            killerMoveIndexOne = false;
+        } else {
+            killerMoves[ply][1] = move;
+            killerMoveIndexOne = true;
+        }
+    }
+}
+
+Search::Search(ChessBoard &board, int depth) : board(board) {
+    killerMoves = new std::array<Move, 2>[depth];
 }
 
 Search::~Search() {
     delete[] killerMoves;
-}
-
-void Search::storeKillerMove(const Move &move, int ply) const {
-    if (move.flag == 0 && move.promotionType == 0) {
-        if (killerMoves[ply][0] == NULL_MOVE) {
-            killerMoves[ply][0] = move;
-            return;
-        }
-        if (killerMoves[ply][1] == NULL_MOVE) {
-            killerMoves[ply][1] = move;
-            return;
-        }
-        if (killerMoves[ply][2] == NULL_MOVE) {
-            killerMoves[ply][2] = move;
-            return;
-        }
-        if (killerMoves[ply][0] != move) {
-            killerMoves[ply][0] = move;
-            return;
-        }
-        if (killerMoves[ply][1] != move) {
-            killerMoves[ply][1] = move;
-            return;
-        }
-        if (killerMoves[ply][2] != move) {
-            killerMoves[ply][2] = move;
-            return;
-        }
-    }
 }

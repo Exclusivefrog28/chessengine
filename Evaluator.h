@@ -11,6 +11,7 @@ class Evaluator {
 public:
     static int evaluate(const ChessBoard &board);
 
+
 private:
     static short flipPosition(short pos);
 };

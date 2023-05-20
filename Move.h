@@ -26,14 +26,14 @@ namespace Moves {
         Type promotionType;
         MoveFlag flag;
         Color player;
+
+        bool operator==(const Move &other) const {
+            return (start == other.start && end == other.end && promotionType == other.promotionType &&
+                    flag == other.flag && player == other.player);
+        }
     };
 
     const Move NULL_MOVE = Move{0, 0, Pieces::EMPTY, QUIET, Color::WHITE};
-
-    static bool operator==(const Move& left, const Move& rigth)
-    {
-        return (left.start == rigth.start && left.end == rigth.end && left.promotionType == rigth.promotionType && left.flag == rigth.flag && left.player == rigth.player);
-    }
 
     const short MAILBOX[120] = {
             -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
@@ -62,16 +62,15 @@ namespace Moves {
     };
 
     const bool SLIDE[7] = {false, false, false, true, true, true, false};
-    const short OFFSETS[7] = {0,4, 8, 4, 4, 8, 8};
+    const short OFFSETS[7] = {0, 4, 8, 4, 4, 8, 8};
     const short OFFSET[7][8] = {
-            {   0,   0,  0,  0, 0,  0,  0,  0 },
-            {   8,   9,  11,  16, 0,  0,  0,  0 },
-            { -21, -19,-12, -8, 8, 12, 19, 21 },
-            { -11,  -9,  9, 11, 0,  0,  0,  0 },
-            { -10,  -1,  1, 10, 0,  0,  0,  0 },
-            { -11, -10, -9, -1, 1,  9, 10, 11 },
-            { -11, -10, -9, -1, 1,  9, 10, 11 }
+            {0,   0,   0,   0,  0, 0,  0,  0},
+            {8,   9,   11,  16, 0, 0,  0,  0},
+            {-21, -19, -12, -8, 8, 12, 19, 21},
+            {-11, -9,  9,   11, 0, 0,  0,  0},
+            {-10, -1,  1,   10, 0, 0,  0,  0},
+            {-11, -10, -9,  -1, 1, 9,  10, 11},
+            {-11, -10, -9,  -1, 1, 9,  10, 11}
     };
-
 }
 #endif //CHESSENGINE_MOVE_H
