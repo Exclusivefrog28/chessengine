@@ -18,17 +18,19 @@ public:
     std::vector<Move> principalVariation;
     ChessBoard&  board;
 
-    static Move search(ChessBoard& board, int depth);
+    explicit Search(ChessBoard &board);
 
-    Search(ChessBoard &board, int depth);
-    virtual ~Search();
+    static Move search(ChessBoard& board, int timeOut);
 
 private:
 
-    std::array<Move, 2>* killerMoves;
+    std::array<std::array<Move, 2>,64> killerMoves;
     bool killerMoveIndexOne = false;
     std::array<std::array<std::array<int, 64>,64>,2> history;
     std::vector<Move> lastPV;
+
+    int nodeCount = 0;
+    int previousNodeCount = 1;
 
     int alphaBeta(int depth, int alpha, int beta, int ply, std::vector<Move>& pv);
     int quiesce(int alpha, int beta, int ply, std::vector<Move>& pv);

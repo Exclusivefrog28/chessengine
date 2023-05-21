@@ -5,21 +5,39 @@
 
 #define MATE_SCORE 65536
 
-Moves::Move Search::search(ChessBoard &board, int depth) {
+Moves::Move Search::search(ChessBoard &board, int timeOut) {
 
     int alpha = INT32_MIN + 1;
     int beta = INT32_MAX;
 
-    Search search = Search(board, depth);
+    Search search = Search(board);
 
-    for (int i = 1; i <= depth; ++i) {
-        if(i > 1) search.lastPV = search.principalVariation;
+    std::chrono::time_point<std::chrono::steady_clock> startTime = std::chrono::steady_clock::now();
+    std::chrono::seconds timeLimit(timeOut);
+
+    int i = 1;
+
+    for (;; ++i) {
+
+        if(i > 1){
+            search.lastPV = search.principalVariation;
+
+            double branchingFactor = static_cast<double>(search.nodeCount) / search.previousNodeCount;
+            search.previousNodeCount = search.nodeCount;
+            double predictedNodes = search.nodeCount * branchingFactor;
+            std::chrono::duration<double> elapsedTime = std::chrono::steady_clock::now() - startTime;
+            std::chrono::duration<double> predictedTime = elapsedTime * (static_cast<double>(predictedNodes / search.nodeCount));
+
+            if(elapsedTime + predictedTime > timeLimit) break;
+        }
         search.principalVariation.clear();
+        search.nodeCount = 0;
         search.alphaBeta(i, alpha, beta, 0, search.principalVariation);
     }
 
+    printf("Depth: %d PV: ", i - 1);
     for (const Move &move: search.principalVariation) {
-        printf(" %s%s", Util::positionToString(move.start).c_str(), Util::positionToString(move.end).c_str());
+        printf("%s%s ", Util::positionToString(move.start).c_str(), Util::positionToString(move.end).c_str());
     }
     printf("\n");
 
@@ -100,6 +118,7 @@ int Search::alphaBeta(int depth, int alpha, int beta, int ply, std::vector<Move>
         }
     }
     if (!hasLegalMoves) {
+        nodeCount++;
         if (MoveGenerator::inCheck(board, board.sideToMove)) return -(MATE_SCORE - ply);
         else return 0;
     } else {
@@ -110,6 +129,7 @@ int Search::alphaBeta(int depth, int alpha, int beta, int ply, std::vector<Move>
 }
 
 int Search::quiesce(int alpha, int beta, int ply, std::vector<Move> &pv) {
+    nodeCount++;
     int stand_pat = Evaluator::evaluate(board);
     if (stand_pat >= beta)
         return beta;
@@ -143,6 +163,7 @@ int Search::quiesce(int alpha, int beta, int ply, std::vector<Move> &pv) {
             std::copy(childPV.begin(), childPV.end(), back_inserter(pv));
         }
     }
+
     return alpha;
 }
 
@@ -234,10 +255,4 @@ void Search::storeKillerMove(Move move, int ply) {
     }
 }
 
-Search::Search(ChessBoard &board, int depth) : board(board) {
-    killerMoves = new std::array<Move, 2>[depth];
-}
-
-Search::~Search() {
-    delete[] killerMoves;
-}
+Search::Search(ChessBoard &board) : board(board) {}

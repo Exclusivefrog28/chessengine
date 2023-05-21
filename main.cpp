@@ -7,8 +7,6 @@
 #include "MoveGenerator.h"
 #include "Evaluator.h"
 #include "Search.h"
-#include "TranspositionTable.h"
-
 ChessBoard board;
 
 extern "C" {
@@ -16,7 +14,6 @@ EMSCRIPTEN_KEEPALIVE
 void init() {
     board.hashCodes.initialize();
     board.setStartingPosition();
-    printf("%ld\n", board.hashCode);
 }
 EMSCRIPTEN_KEEPALIVE
 char *move(int start, int end, int flag, int promotionType, int player) {
@@ -27,7 +24,6 @@ char *move(int start, int end, int flag, int promotionType, int player) {
     const int length = fen.length();
     char *chararray = new char[length + 1];
     strcpy(chararray, fen.c_str());
-    printf("%ld\n", board.hashCode);
     return chararray;
 }
 
@@ -39,7 +35,6 @@ char *unmove() {
     const int length = fen.length();
     char *chararray = new char[length + 1];
     strcpy(chararray, fen.c_str());
-    printf("%ld\n", board.hashCode);
     return chararray;
 }
 
@@ -136,8 +131,8 @@ int eval() {
 }
 
 EMSCRIPTEN_KEEPALIVE
-char *getBestMove(int depth) {
-    Move bestMove = Search::search(board, depth);
+char *getBestMove(int seconds) {
+    Move bestMove = Search::search(board, seconds);
     std::string bestMoveJSON = R"({"start":")";
     bestMoveJSON += Util::positionToString(bestMove.start);
     bestMoveJSON += R"(","end":")";
