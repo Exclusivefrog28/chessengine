@@ -1,0 +1,50 @@
+@startuml
+
+skinparam backgroundcolor transparent
+
+/' Objects '/
+
+class ChessBoard {
+	+sideToMove : Color
+	+fullMoveClock : int
+	+halfMoveClock : int
+	+enPassantSquare : short
+	+castlingRights : CastlingRights
+
+    +squares : std::array<Square, 64>
+	+whitePieces : std::vector<Piece>
+	+blackPieces : std::vector<Piece>
+	+whitePawns : std::vector<short>
+	+blackPawns : std::vector<short>
+	+whiteKing : short
+	+blackKing : short
+
+	+moveHistory : std::vector<Move>
+	+enPassantHistory : std::vector<short>
+    +castlingRightHistory : std::vector<CastlingRights>
+
+	+makeMove(const Move& move) : void
+	+unMakeMove() : void
+	-movePiece(short start, short end) : void
+	-removePiece(short position) : void
+	-setPiece(short position, const Square& piece) : void
+	-updateCastlingRights(const Move& move) : void
+
+	+setPosition(std::string fen) : void
+	+setStartingPosition() : void
+	+fen() : std::string
+
+}
+
+
+class ChessBoard::CastlingRights {
+	+blackKingSide : bool
+	+blackQueenSide : bool
+	+whiteKingSide : bool
+	+whiteQueenSide : bool
+}
+
+ChessBoard *-- ChessBoard::CastlingRights
+ChessBoard -[hidden]> ChessBoard::CastlingRights
+
+@enduml

@@ -1,0 +1,62 @@
+@startuml
+
+skinparam backgroundcolor transparent
+
+/' Objects '/
+
+namespace Pieces {
+	enum Color {
+		BLACK
+		WHITE
+	}
+
+	enum Type {
+		EMPTY = 0
+        PAWN = 1
+        KNIGHT = 2
+        BISHOP = 3
+        ROOK = 4
+        QUEEN = 5
+        KING = 6
+	}
+
+	class Piece {
+		+type : Type
+		+position : short
+	}
+
+	class Square {
+		+color : Color
+		+type : Type
+	}
+}
+
+
+
+
+
+/' Inheritance relationships '/
+
+
+
+
+/' Aggregation relationships '/
+
+Pieces.Piece *-- Pieces.Type
+
+
+Pieces.Square *-- Pieces.Color
+
+
+Pieces.Square *-- Pieces.Type
+
+
+
+
+
+
+/' Nested objects '/
+
+
+
+@enduml

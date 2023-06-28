@@ -1,0 +1,52 @@
+@startuml
+
+skinparam backgroundcolor transparent
+
+/' Objects '/
+
+namespace Moves {
+	enum MoveFlag {
+		QUIET = 0
+                CAPTUREPAWN = 1
+                CAPTUREKNIGHT = 2
+                CAPTUREBISHOP = 3
+                CAPTUREROOK = 4
+                CAPTUREQUEEN = 5
+                ENPASSANT = 6
+                DOUBLEPAWNPUSH = 7
+                CASTLEKINGSIDE = 8
+                CASTLEQUEENSIDE = 9
+	}
+
+	class Move {
+		+player : Color
+		+flag : MoveFlag
+		+promotionType : Type
+		+end : short
+		+start : short
+	}
+}
+
+
+
+
+
+/' Inheritance relationships '/
+
+
+
+
+/' Aggregation relationships '/
+
+Moves.Move *-- Moves.MoveFlag
+
+
+
+
+
+
+/' Nested objects '/
+
+
+
+@enduml
