@@ -24,6 +24,8 @@ void ChessBoard::makeMove(const Move &move) {
 
     enPassantHistory.push_back(enPassantSquare);
     castlingRightHistory.push_back(castlingRights);
+    halfMoveClockHistory.push_back(halfMoveClock);
+
     if (move.flag == ENPASSANT) {
         removePiece(enPassantSquare);
     }
@@ -75,16 +77,23 @@ void ChessBoard::unMakeMove() {
                hashCodes.castlingRightCodes[castlingRights.blackKingSide * 8 + castlingRights.blackQueenSide * 4 +
                                              castlingRights.whiteKingSide * 2 + castlingRights.whiteQueenSide];
     Move lastMove = moveHistory[moveHistory.size() - 1];
+
     castlingRights = castlingRightHistory[castlingRightHistory.size() - 1];
+
     enPassantSquare = enPassantHistory[enPassantHistory.size() - 1];
     if (enPassantSquare != -1) hashCode ^= hashCodes.enPassantFileCode[enPassantSquare / 8];
     hashCode ^= hashCodes.castlingRightCodes[castlingRights.blackKingSide * 8 + castlingRights.blackQueenSide * 4 +
                                               castlingRights.whiteKingSide * 2 + castlingRights.whiteQueenSide];
 
+    halfMoveClock = halfMoveClockHistory[halfMoveClockHistory.size() - 1];
 
     moveHistory.pop_back();
     castlingRightHistory.pop_back();
     enPassantHistory.pop_back();
+    halfMoveClockHistory.pop_back();
+
+    if(lastMove.player == BLACK) fullMoveClock--;
+
 
     if (lastMove.promotionType != EMPTY) {
         removePiece(lastMove.end);

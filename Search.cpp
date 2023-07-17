@@ -18,18 +18,21 @@ Moves::Move Search::search(ChessBoard &board, int timeOut) {
     int i = 1;
 
     for (;; ++i) {
+        if (i > 1) {
+            if(search.principalVariation.size() <= search.lastPV.size()) break;
 
-        if(i > 1){
             search.lastPV = search.principalVariation;
 
             double branchingFactor = static_cast<double>(search.nodeCount) / search.previousNodeCount;
             search.previousNodeCount = search.nodeCount;
             double predictedNodes = search.nodeCount * branchingFactor;
             std::chrono::duration<double> elapsedTime = std::chrono::steady_clock::now() - startTime;
-            std::chrono::duration<double> predictedTime = elapsedTime * (static_cast<double>(predictedNodes / search.nodeCount));
+            std::chrono::duration<double> predictedTime =
+                    elapsedTime * (static_cast<double>(predictedNodes / search.nodeCount));
 
-            if(elapsedTime + predictedTime > timeLimit) break;
+            if (elapsedTime + predictedTime > timeLimit) break;
         }
+
         search.principalVariation.clear();
         search.nodeCount = 0;
         search.alphaBeta(i, alpha, beta, 0, search.principalVariation);
@@ -47,7 +50,7 @@ Moves::Move Search::search(ChessBoard &board, int timeOut) {
 int Search::alphaBeta(int depth, int alpha, int beta, int ply, std::vector<Move> &pv) {
     if (depth == 0) return quiesce(alpha, beta, ply, pv);
 
-    Move* hashMove = nullptr;
+    Move *hashMove = nullptr;
 
     if (TranspositionTable::contains(board.hashCode)) {
         TranspositionTable::Entry entry = TranspositionTable::getEntry(board.hashCode, ply);
@@ -84,6 +87,7 @@ int Search::alphaBeta(int depth, int alpha, int beta, int ply, std::vector<Move>
 
     for (int i = 0; i < moves.size(); i++) {
         Move move = selectMove(moves, i);
+        int score;
 
         board.makeMove(move);
         if (MoveGenerator::inCheck(board, invertColor(board.sideToMove))) {
@@ -94,11 +98,16 @@ int Search::alphaBeta(int depth, int alpha, int beta, int ply, std::vector<Move>
         std::vector<Move> childPV;
         hasLegalMoves = true;
 
-        int score = -alphaBeta(depth - 1, -beta, -alpha, ply + 1, childPV);
+
+        if (board.halfMoveClock >= 100 &&
+            !(board.squares[move.start].type == PAWN || (move.flag >= 1 && move.flag <= 5)))
+            score = 0;
+        else score = -alphaBeta(depth - 1, -beta, -alpha, ply + 1, childPV);
+
         board.unMakeMove();
 
         if (score >= beta) {
-            if (move.flag == 0 || move.flag >= 7){
+            if (move.flag == 0 || move.flag >= 7) {
                 storeKillerMove(move, ply);
                 history[board.sideToMove][move.start][move.end] += depth * depth;
             }
@@ -167,7 +176,7 @@ int Search::quiesce(int alpha, int beta, int ply, std::vector<Move> &pv) {
     return alpha;
 }
 
-std::vector<ScoredMove> Search::scoreMoves(const std::vector<Move> &moves, int ply, Move* hashMove) const {
+std::vector<ScoredMove> Search::scoreMoves(const std::vector<Move> &moves, int ply, Move *hashMove) const {
 
     std::vector<ScoredMove> scoredMoves;
 
@@ -185,9 +194,8 @@ std::vector<ScoredMove> Search::scoreMoves(const std::vector<Move> &moves, int p
             if (move == killerMoves[ply][0] || move == killerMoves[ply][1])
                 score = 1 << 14;
             else score = history[board.sideToMove][move.start][move.end];
-        }
-        else {
-            if(move.flag == 6) score = 1 << 16;
+        } else {
+            if (move.flag == 6) score = 1 << 16;
             else {
                 int agressor = EvaluationValues::mg_value[board.squares[move.start].type - 1];
                 int victim = EvaluationValues::mg_value[move.flag - 1];

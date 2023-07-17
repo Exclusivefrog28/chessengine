@@ -45,6 +45,7 @@ public:
     std::vector<Move> moveHistory;
     std::vector<CastlingRights> castlingRightHistory;
     std::vector<short> enPassantHistory;
+    std::vector<int> halfMoveClockHistory;
 
     long int hashCode{};
     HashCodes hashCodes{};
