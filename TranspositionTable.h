@@ -4,14 +4,16 @@
 #include <array>
 #include "Move.h"
 
-#define TT_SIZE (1<<12)
+// 32 megabytes
+#define TT_SIZE (1<<20)
 
 class TranspositionTable {
 public:
     enum NodeType {
-        EXACT = 0,
-        LOWERBOUND = 1,
-        UPPERBOUND = 2
+        EMPTY = 0,
+        EXACT = 1,
+        LOWERBOUND = 2,
+        UPPERBOUND = 3
     };
     struct Entry {
         long int key;
@@ -21,19 +23,23 @@ public:
         NodeType nodeType;
     };
 
-    static TranspositionTable &getInstance();
+    bool contains(long int key);
 
-    static bool contains(long int key);
+    Entry getEntry(long int key, int ply);
 
-    static Entry getEntry(long int key, int ply);
+    void setEntry(long int key, Entry entry, int ply);
 
-    static void setEntry(long int key, Entry entry);
-
-private:
-    static TranspositionTable *instance;
+    int reads;
+    int writes;
+    int collisions;
+    void resetCounters();
 
     std::array<Entry, TT_SIZE> entries;
-};
 
+private:
+    void write(int index, Entry entry);
+
+
+};
 
 #endif

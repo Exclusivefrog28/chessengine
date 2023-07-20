@@ -5,6 +5,8 @@
 
 #define MATE_SCORE 65536
 
+TranspositionTable Search::tt = TranspositionTable();
+
 Moves::Move Search::search(ChessBoard &board, int timeOut) {
 
     int alpha = INT32_MIN + 1;
@@ -19,53 +21,57 @@ Moves::Move Search::search(ChessBoard &board, int timeOut) {
 
     for (;; ++i) {
         if (i > 1) {
-            if(search.principalVariation.size() <= search.lastPV.size()) break;
+            std::chrono::duration<double> timeSpent = std::chrono::steady_clock::now() - startTime;
+            search.lastPV = search.collectPV();
 
-            search.lastPV = search.principalVariation;
+//            if(search.lastPV.size() < i - 1) break; //true score (i.e. mate or draw)
 
-            double branchingFactor = static_cast<double>(search.nodeCount) / search.previousNodeCount;
-            search.previousNodeCount = search.nodeCount;
-            double predictedNodes = search.nodeCount * branchingFactor;
-            std::chrono::duration<double> elapsedTime = std::chrono::steady_clock::now() - startTime;
-            std::chrono::duration<double> predictedTime =
-                    elapsedTime * (static_cast<double>(predictedNodes / search.nodeCount));
+//            double branchingFactor = static_cast<double>(search.nodeCount) / search.previousNodeCount;
+//            search.previousNodeCount = search.nodeCount;
+//            double predictedNodes = search.nodeCount * branchingFactor;
+//            std::chrono::duration<double> elapsedTime = std::chrono::steady_clock::now() - startTime;
+//            std::chrono::duration<double> predictedTime =
+//                    elapsedTime * (static_cast<double>(predictedNodes / search.nodeCount));
+//
+//            if (elapsedTime + predictedTime > timeLimit) break;
 
-            if (elapsedTime + predictedTime > timeLimit) break;
+            if((timeSpent * 2) > timeLimit) break;
         }
-
-        search.principalVariation.clear();
         search.nodeCount = 0;
-        search.alphaBeta(i, alpha, beta, 0, search.principalVariation);
+        search.alphaBeta(i, alpha, beta, 0);
     }
 
-    printf("Depth: %d PV: ", i - 1);
-    for (const Move &move: search.principalVariation) {
+    printf("Depth: %d\nPV: ", i - 1);
+    for (const Move &move: search.lastPV) {
         printf("%s%s ", Util::positionToString(move.start).c_str(), Util::positionToString(move.end).c_str());
     }
-    printf("\n");
+    printf("\nTT reads: %d", tt.reads);
+    printf("\nTT writes: %d", tt.writes);
+    printf("\nTT collisions: %d", tt.collisions);
+    printf("\n**************************\n");
+    tt.resetCounters();
 
-    return search.principalVariation[0];
+    return search.lastPV[0];
 }
 
-int Search::alphaBeta(int depth, int alpha, int beta, int ply, std::vector<Move> &pv) {
-    if (depth == 0) return quiesce(alpha, beta, ply, pv);
+int Search::alphaBeta(int depth, int alpha, int beta, int ply) {
+    if (depth == 0) return quiesce(alpha, beta, ply);
 
     Move *hashMove = nullptr;
 
-    if (TranspositionTable::contains(board.hashCode)) {
-        TranspositionTable::Entry entry = TranspositionTable::getEntry(board.hashCode, ply);
+    if (tt.contains(board.hashCode)) {
+        TranspositionTable::Entry entry = tt.getEntry(board.hashCode, ply);
         if (entry.depth >= depth) {
             switch (entry.nodeType) {
                 case TranspositionTable::EXACT:
-                    pv.push_back(entry.bestMove);
                     return entry.score;
                 case TranspositionTable::UPPERBOUND:
                     if (entry.score <= alpha) return entry.score;
+                    hashMove = &entry.bestMove;
                     beta = std::min(beta, entry.score);
                     break;
                 case TranspositionTable::LOWERBOUND:
                     if (entry.score >= beta) {
-                        pv.push_back(entry.bestMove);
                         return entry.score;
                     }
                     hashMove = &entry.bestMove;
@@ -84,6 +90,7 @@ int Search::alphaBeta(int depth, int alpha, int beta, int ply, std::vector<Move>
 
     TranspositionTable::NodeType nodeType = TranspositionTable::UPPERBOUND;
     Move bestMove{};
+    int bestScore = INT32_MIN;
 
     for (int i = 0; i < moves.size(); i++) {
         Move move = selectMove(moves, i);
@@ -95,14 +102,12 @@ int Search::alphaBeta(int depth, int alpha, int beta, int ply, std::vector<Move>
             continue;
         }
 
-        std::vector<Move> childPV;
         hasLegalMoves = true;
-
 
         if (board.halfMoveClock >= 100 &&
             !(board.squares[move.start].type == PAWN || (move.flag >= 1 && move.flag <= 5)))
             score = 0;
-        else score = -alphaBeta(depth - 1, -beta, -alpha, ply + 1, childPV);
+        else score = -alphaBeta(depth - 1, -beta, -alpha, ply + 1);
 
         board.unMakeMove();
 
@@ -112,18 +117,19 @@ int Search::alphaBeta(int depth, int alpha, int beta, int ply, std::vector<Move>
                 history[board.sideToMove][move.start][move.end] += depth * depth;
             }
 
-            TranspositionTable::setEntry(board.hashCode,
-                                         {board.hashCode, move, depth, score, TranspositionTable::LOWERBOUND});
+            tt.setEntry(board.hashCode,
+                                         {board.hashCode, move, depth, score, TranspositionTable::LOWERBOUND}, ply);
             return score;
         }
         if (score > alpha) {
             alpha = score;
+            bestScore = score;
             bestMove = move;
             nodeType = TranspositionTable::EXACT;
 
-            pv.clear();
-            pv.push_back(move);
-            std::copy(childPV.begin(), childPV.end(), back_inserter(pv));
+        }else if(score > bestScore){
+            bestScore = score;
+            bestMove = move;
         }
     }
     if (!hasLegalMoves) {
@@ -131,13 +137,13 @@ int Search::alphaBeta(int depth, int alpha, int beta, int ply, std::vector<Move>
         if (MoveGenerator::inCheck(board, board.sideToMove)) return -(MATE_SCORE - ply);
         else return 0;
     } else {
-        TranspositionTable::setEntry(board.hashCode, {board.hashCode, bestMove, depth, alpha, nodeType});
+        tt.setEntry(board.hashCode, {board.hashCode, bestMove, depth, alpha, nodeType}, ply);
     }
 
     return alpha;
 }
 
-int Search::quiesce(int alpha, int beta, int ply, std::vector<Move> &pv) {
+int Search::quiesce(int alpha, int beta, int ply) {
     nodeCount++;
     int stand_pat = Evaluator::evaluate(board);
     if (stand_pat >= beta)
@@ -153,13 +159,12 @@ int Search::quiesce(int alpha, int beta, int ply, std::vector<Move> &pv) {
     for (int i = 0; i < moves.size(); i++) {
         Move move = selectMove(moves, i);
 
-        std::vector<Move> childPV;
         board.makeMove(move);
         if (MoveGenerator::inCheck(board, invertColor(board.sideToMove))) {
             board.unMakeMove();
             continue;
         }
-        int score = -quiesce(-beta, -alpha, ply + 1, childPV);
+        int score = -quiesce(-beta, -alpha, ply + 1);
         board.unMakeMove();
 
         if (score >= beta) {
@@ -167,9 +172,6 @@ int Search::quiesce(int alpha, int beta, int ply, std::vector<Move> &pv) {
         }
         if (score > alpha) {
             alpha = score;
-            pv.clear();
-            pv.push_back(move);
-            std::copy(childPV.begin(), childPV.end(), back_inserter(pv));
         }
     }
 
@@ -264,3 +266,23 @@ void Search::storeKillerMove(Move move, int ply) {
 }
 
 Search::Search(ChessBoard &board) : board(board) {}
+
+std::vector<Move> Search::collectPV() {
+    std::vector<Move> pv;
+
+    int depth = 0;
+    while(tt.contains(board.hashCode)) {
+        TranspositionTable::Entry entry = tt.getEntry(board.hashCode, 0);
+        if (entry.nodeType != TranspositionTable::EXACT) break;
+
+        Move move = entry.bestMove;
+        board.makeMove(move);
+        pv.push_back(move);
+        depth++;
+    }
+    for (; depth > 0; --depth) {
+        board.unMakeMove();
+    }
+
+    return pv;
+}

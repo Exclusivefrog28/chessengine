@@ -7,6 +7,8 @@
 #include "MoveGenerator.h"
 #include "Evaluator.h"
 #include "Search.h"
+#include "TranspositionTable.h"
+
 ChessBoard board;
 
 extern "C" {
@@ -167,6 +169,15 @@ int runPerft(int depth, const char *fen) {
 
 EMSCRIPTEN_KEEPALIVE
 int main() {
+//    Move move = {0, 1, EMPTY, QUIET, WHITE};
+//    TranspositionTable tt;
+//
+//    tt.entries[47] = {47, move, 1, 21, TranspositionTable::EXACT};
+//
+//    TranspositionTable::Entry answer = tt.getEntry(47, 1);
+//
+//    printf("%d\n", answer.score);
+
     return 0;
 }
 }
