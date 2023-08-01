@@ -6,16 +6,16 @@
 
 class HashCodes {
 public:
-    long int initialCode;
-    std::array<long int, 12 * 64> pieceCodes;
-    long int blackToMoveCode;
-    std::array<long int, 16> castlingRightCodes;
-    std::array<long int, 8> enPassantFileCode;
+    unsigned long int initialCode;
+    std::array<unsigned long int, 12 * 64> pieceCodes;
+    unsigned long int blackToMoveCode;
+    std::array<unsigned long int, 16> castlingRightCodes;
+    std::array<unsigned long int, 8> enPassantFileCode;
 
     void initialize() {
         std::random_device dev;
         std::mt19937_64 rng(dev());
-        std::uniform_int_distribution<long int> dist(std::numeric_limits<long int>::min(), std::numeric_limits<long int>::max());
+        std::uniform_int_distribution<unsigned long int> dist(std::numeric_limits<unsigned long int>::min(), std::numeric_limits<unsigned long int>::max());
 
         initialCode = dist(rng);
 
@@ -31,7 +31,7 @@ public:
         }
     }
 
-    long int pieceCode(Pieces::Type type, Pieces::Color color, short position) {
+    unsigned long int pieceCode(Pieces::Type type, Pieces::Color color, short position) {
         return pieceCodes[((type - 1) * 64) + (color * 6*64) + position];
     }
 };

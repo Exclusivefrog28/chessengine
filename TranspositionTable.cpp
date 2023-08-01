@@ -1,10 +1,9 @@
-#include <cstdio>
 #include "TranspositionTable.h"
 
 #define MATE_SCORE 65536
 
-TranspositionTable::Entry TranspositionTable::getEntry(long int key, int ply) {
-    int index = abs(key) % TT_SIZE;
+TranspositionTable::Entry TranspositionTable::getEntry(unsigned long int key, int ply) {
+    int index = key % TT_SIZE;
     Entry entry = entries[index];
 
     if (abs(entry.score) == MATE_SCORE) {
@@ -16,8 +15,8 @@ TranspositionTable::Entry TranspositionTable::getEntry(long int key, int ply) {
     return entry;
 }
 
-bool TranspositionTable::contains(long int key) {
-    int index = abs(key) % TT_SIZE;
+bool TranspositionTable::contains(unsigned long int key) {
+    int index = key % TT_SIZE;
     bool exists = entries[index].nodeType != EMPTY;
     bool sameKey = (entries[index].key == key);
     if(exists && !sameKey) collisions++;
@@ -25,8 +24,8 @@ bool TranspositionTable::contains(long int key) {
     return exists && sameKey;
 }
 
-void TranspositionTable::setEntry(long int key, TranspositionTable::Entry entry, int ply) {
-    int index = abs(key) % TT_SIZE;
+void TranspositionTable::setEntry(unsigned long int key, TranspositionTable::Entry entry, int ply) {
+    int index = key % TT_SIZE;
 
     if (abs(entry.score) >= MATE_SCORE - (entry.depth + ply)) {
         int sign = entry.score > 0 ? 1 : -1;

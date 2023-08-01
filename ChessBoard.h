@@ -21,8 +21,14 @@ public:
         bool blackQueenSide;
         bool whiteKingSide;
         bool whiteQueenSide;
-    };
 
+        bool operator ==(const CastlingRights &other) const{
+            return blackKingSide == other.blackKingSide &&
+                   blackQueenSide == other.blackQueenSide &&
+                   whiteKingSide == other.whiteKingSide &&
+                   whiteQueenSide == other.whiteQueenSide;
+        }
+    };
 
     std::array<Square, 64> squares{};
 
@@ -47,7 +53,10 @@ public:
     std::vector<short> enPassantHistory;
     std::vector<int> halfMoveClockHistory;
 
-    long int hashCode{};
+    std::vector<unsigned long int> positionHistory;
+    std::vector<int> irreversibleIndices; //indices of positionHistory from where irreversible moves were made
+
+    unsigned long int hashCode{};
     HashCodes hashCodes{};
 
     ChessBoard();
@@ -71,7 +80,7 @@ private:
 
     void removePiece(short position);
 
-    void updateCastlingRights(const Move &move);
+    bool updateCastlingRights(const Move &move);
 
 };
 

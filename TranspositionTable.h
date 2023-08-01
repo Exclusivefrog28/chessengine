@@ -4,8 +4,8 @@
 #include <array>
 #include "Move.h"
 
-// 32 megabytes
-#define TT_SIZE (1<<20)
+// 64 megabytes
+#define TT_SIZE (1<<21)
 
 class TranspositionTable {
 public:
@@ -13,21 +13,21 @@ public:
         EMPTY = 0,
         EXACT = 1,
         LOWERBOUND = 2,
-        UPPERBOUND = 3
+        UPPERBOUND = 3,
     };
     struct Entry {
-        long int key;
+        unsigned long int key;
         Moves::Move bestMove;
         int depth;
         int score;
         NodeType nodeType;
     };
 
-    bool contains(long int key);
+    bool contains(unsigned long int key);
 
-    Entry getEntry(long int key, int ply);
+    Entry getEntry(unsigned long int key, int ply);
 
-    void setEntry(long int key, Entry entry, int ply);
+    void setEntry(unsigned long int key, Entry entry, int ply);
 
     int reads;
     int writes;

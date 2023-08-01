@@ -2,6 +2,7 @@
 #include "Evaluator.h"
 #include "MoveGenerator.h"
 #include "TranspositionTable.h"
+#include <unordered_set>
 
 #define MATE_SCORE 65536
 
@@ -22,9 +23,9 @@ Moves::Move Search::search(ChessBoard &board, int timeOut) {
     for (;; ++i) {
         if (i > 1) {
             std::chrono::duration<double> timeSpent = std::chrono::steady_clock::now() - startTime;
-            search.lastPV = search.collectPV();
-
-//            if(search.lastPV.size() < i - 1) break; //true score (i.e. mate or draw)
+            bool gameOver = false;
+            search.lastPV = search.collectPV(i - 1, gameOver);
+            if (gameOver) break;
 
 //            double branchingFactor = static_cast<double>(search.nodeCount) / search.previousNodeCount;
 //            search.previousNodeCount = search.nodeCount;
@@ -35,9 +36,8 @@ Moves::Move Search::search(ChessBoard &board, int timeOut) {
 //
 //            if (elapsedTime + predictedTime > timeLimit) break;
 
-            if((timeSpent * 2) > timeLimit) break;
+            if ((timeSpent * 2) > timeLimit) break;
         }
-        search.nodeCount = 0;
         search.alphaBeta(i, alpha, beta, 0);
     }
 
@@ -55,30 +55,11 @@ Moves::Move Search::search(ChessBoard &board, int timeOut) {
 }
 
 int Search::alphaBeta(int depth, int alpha, int beta, int ply) {
-    if (depth == 0) return quiesce(alpha, beta, ply);
+    if (depth == 0) return quiesce(alpha, beta, ply, 0);
 
-    Move *hashMove = nullptr;
-
-    if (tt.contains(board.hashCode)) {
-        TranspositionTable::Entry entry = tt.getEntry(board.hashCode, ply);
-        if (entry.depth >= depth) {
-            switch (entry.nodeType) {
-                case TranspositionTable::EXACT:
-                    return entry.score;
-                case TranspositionTable::UPPERBOUND:
-                    if (entry.score <= alpha) return entry.score;
-                    hashMove = &entry.bestMove;
-                    beta = std::min(beta, entry.score);
-                    break;
-                case TranspositionTable::LOWERBOUND:
-                    if (entry.score >= beta) {
-                        return entry.score;
-                    }
-                    hashMove = &entry.bestMove;
-                    alpha = std::max(alpha, entry.score);
-            }
-        }
-    }
+    Move hashMove{};
+    int positionScore = 0;
+    if (getTransposition(board.hashCode, depth, ply, positionScore, alpha, beta, hashMove)) return positionScore;
 
     alpha = std::max(alpha, -MATE_SCORE + ply);
     beta = std::min(beta, MATE_SCORE - ply);
@@ -94,7 +75,6 @@ int Search::alphaBeta(int depth, int alpha, int beta, int ply) {
 
     for (int i = 0; i < moves.size(); i++) {
         Move move = selectMove(moves, i);
-        int score;
 
         board.makeMove(move);
         if (MoveGenerator::inCheck(board, invertColor(board.sideToMove))) {
@@ -104,10 +84,26 @@ int Search::alphaBeta(int depth, int alpha, int beta, int ply) {
 
         hasLegalMoves = true;
 
+        bool draw = false;
+        //50 move rule
         if (board.halfMoveClock >= 100 &&
             !(board.squares[move.start].type == PAWN || (move.flag >= 1 && move.flag <= 5)))
-            score = 0;
-        else score = -alphaBeta(depth - 1, -beta, -alpha, ply + 1);
+            draw = true;
+        //threefold repetition
+        else {
+            int repetitions = 1;
+            for (int j = board.positionHistory.size() - 1;
+                 j >= 0 && (board.irreversibleIndices.empty() || board.irreversibleIndices.back() < j);
+                 --j) {
+                if (board.positionHistory[j] == board.hashCode) repetitions++;
+                if (repetitions == 3) {
+                    draw = true;
+                    break;
+                }
+            }
+        }
+
+        int score = (draw) ? 0 : -alphaBeta(depth - 1, -beta, -alpha, ply + 1);
 
         board.unMakeMove();
 
@@ -118,7 +114,7 @@ int Search::alphaBeta(int depth, int alpha, int beta, int ply) {
             }
 
             tt.setEntry(board.hashCode,
-                                         {board.hashCode, move, depth, score, TranspositionTable::LOWERBOUND}, ply);
+                        {board.hashCode, move, depth, score, TranspositionTable::LOWERBOUND}, ply);
             return score;
         }
         if (score > alpha) {
@@ -127,24 +123,22 @@ int Search::alphaBeta(int depth, int alpha, int beta, int ply) {
             bestMove = move;
             nodeType = TranspositionTable::EXACT;
 
-        }else if(score > bestScore){
+        } else if (score > bestScore) {
             bestScore = score;
             bestMove = move;
         }
     }
     if (!hasLegalMoves) {
-        nodeCount++;
         if (MoveGenerator::inCheck(board, board.sideToMove)) return -(MATE_SCORE - ply);
         else return 0;
     } else {
-        tt.setEntry(board.hashCode, {board.hashCode, bestMove, depth, alpha, nodeType}, ply);
+        tt.setEntry(board.hashCode, {board.hashCode, bestMove, depth, bestScore, nodeType}, ply);
     }
 
     return alpha;
 }
 
-int Search::quiesce(int alpha, int beta, int ply) {
-    nodeCount++;
+int Search::quiesce(int alpha, int beta, int ply, int depth) {
     int stand_pat = Evaluator::evaluate(board);
     if (stand_pat >= beta)
         return beta;
@@ -154,7 +148,16 @@ int Search::quiesce(int alpha, int beta, int ply) {
         return alpha;
     }
 
-    std::vector<ScoredMove> moves = scoreTacticalMoves(MoveGenerator::tacticalMoves(board));
+    Move hashMove{};
+    int positionScore = 0;
+
+    if (getTransposition(board.hashCode, depth, ply, positionScore, alpha, beta, hashMove)) return positionScore;
+
+    std::vector<ScoredMove> moves = scoreTacticalMoves(MoveGenerator::tacticalMoves(board), hashMove);
+
+    TranspositionTable::NodeType nodeType = TranspositionTable::UPPERBOUND;
+    Move bestMove{};
+    int bestScore = INT32_MIN;
 
     for (int i = 0; i < moves.size(); i++) {
         Move move = selectMove(moves, i);
@@ -164,21 +167,29 @@ int Search::quiesce(int alpha, int beta, int ply) {
             board.unMakeMove();
             continue;
         }
-        int score = -quiesce(-beta, -alpha, ply + 1);
+        int score = -quiesce(-beta, -alpha, ply + 1, depth - 1);
         board.unMakeMove();
 
         if (score >= beta) {
+            tt.setEntry(board.hashCode, {board.hashCode, move, depth, score, TranspositionTable::LOWERBOUND}, ply);
             return score;
         }
         if (score > alpha) {
             alpha = score;
+            bestScore = score;
+            bestMove = move;
+            nodeType = TranspositionTable::EXACT;
+        } else if (score > bestScore) {
+            bestScore = score;
+            bestMove = move;
         }
     }
+    tt.setEntry(board.hashCode, {board.hashCode, bestMove, depth, bestScore, nodeType}, ply);
 
     return alpha;
 }
 
-std::vector<ScoredMove> Search::scoreMoves(const std::vector<Move> &moves, int ply, Move *hashMove) const {
+std::vector<ScoredMove> Search::scoreMoves(const std::vector<Move> &moves, int ply, Move hashMove) const {
 
     std::vector<ScoredMove> scoredMoves;
 
@@ -188,7 +199,7 @@ std::vector<ScoredMove> Search::scoreMoves(const std::vector<Move> &moves, int p
 
         if (lastPV.size() - 1 <= ply && lastPV[ply] == move) score = 1 << 31;
 
-        else if (hashMove != nullptr && move == *hashMove) score = 1 << 30;
+        else if (move == hashMove) score = 1 << 30;
 
         else if (move.promotionType != 0) {
             score = EvaluationValues::mg_value[move.promotionType - 1] - EvaluationValues::mg_value[0];
@@ -213,24 +224,29 @@ std::vector<ScoredMove> Search::scoreMoves(const std::vector<Move> &moves, int p
     return scoredMoves;
 }
 
-std::vector<ScoredMove> Search::scoreTacticalMoves(const std::vector<Move> &moves) const {
+std::vector<ScoredMove> Search::scoreTacticalMoves(const std::vector<Move> &moves, Move hashMove) const {
 
     std::vector<ScoredMove> scoredMoves;
 
+
     for (const Move &move: moves) {
         int score;
-        if (move.promotionType != 0)
-            score = EvaluationValues::mg_value[move.promotionType - 1] - EvaluationValues::mg_value[0];
-        else
-            score = EvaluationValues::mg_value[move.flag - 1] -
-                    EvaluationValues::mg_value[board.squares[move.start].type - 1];
+
+        if (move == hashMove) score = 1 << 30;
+        else {
+            if (move.promotionType != 0)
+                score = EvaluationValues::mg_value[move.promotionType - 1] - EvaluationValues::mg_value[0];
+            else
+                score = EvaluationValues::mg_value[move.flag - 1] -
+                        EvaluationValues::mg_value[board.squares[move.start].type - 1];
+        }
 
         scoredMoves.push_back({move, score});
     }
     return scoredMoves;
 }
 
-Move Search::selectMove(std::vector<ScoredMove> &moves, int index) const {
+Move Search::selectMove(std::vector<ScoredMove> &moves, int index) {
 
     int selectedIndex = index;
     ScoredMove selected = moves[selectedIndex];
@@ -267,22 +283,57 @@ void Search::storeKillerMove(Move move, int ply) {
 
 Search::Search(ChessBoard &board) : board(board) {}
 
-std::vector<Move> Search::collectPV() {
+std::vector<Move> Search::collectPV(int depth, bool &gameOver) {
     std::vector<Move> pv;
+    std::unordered_set<unsigned long> pvPositions;
+    pv.reserve(depth);
 
-    int depth = 0;
-    while(tt.contains(board.hashCode)) {
+    int pvDepth = 0;
+    while (tt.contains(board.hashCode) && pvPositions.find(board.hashCode) == pvPositions.end()) {
         TranspositionTable::Entry entry = tt.getEntry(board.hashCode, 0);
         if (entry.nodeType != TranspositionTable::EXACT) break;
-
+        if (abs(entry.score) == MATE_SCORE) gameOver = true;
         Move move = entry.bestMove;
+        pvPositions.insert(board.hashCode);
         board.makeMove(move);
         pv.push_back(move);
-        depth++;
+        pvDepth++;
     }
-    for (; depth > 0; --depth) {
+    for (; pvDepth > 0; --pvDepth) {
         board.unMakeMove();
     }
 
     return pv;
+}
+
+bool Search::getTransposition(unsigned long hash, int depth, int ply, int &score, int &alpha, int &beta,
+                              Move &hashMove) const {
+
+    if (tt.contains(hash)) {
+        TranspositionTable::Entry entry = tt.getEntry(hash, ply);
+        if (entry.depth >= depth) {
+            switch (entry.nodeType) {
+                case TranspositionTable::EXACT:
+                    score = entry.score;
+                    return true;
+                case TranspositionTable::UPPERBOUND:
+                    if (entry.score <= alpha) {
+                        score = entry.score;
+                        return true;
+                    }
+                    hashMove = entry.bestMove;
+                    beta = std::min(beta, entry.score);
+                    break;
+                case TranspositionTable::LOWERBOUND:
+                    if (entry.score >= beta) {
+                        score = entry.score;
+                        return true;
+                    }
+                    hashMove = entry.bestMove;
+                    alpha = std::max(alpha, entry.score);
+            }
+        }
+    }
+
+    return false;
 }

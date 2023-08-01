@@ -10,5 +10,5 @@ set_target_properties(ChessEngine PROPERTIES
         BUILD_FLAGS ""
         )
 
-#--profiling -s ENVIRONMENT=web
-#-s ENVIRONMENT=node
+#-s ENVIRONMENT=web / -s ENVIRONMENT=node
+#--profiling -g -s ASSERTIONS
