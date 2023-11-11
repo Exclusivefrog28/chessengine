@@ -2,6 +2,7 @@
 #define CHESSENGINE_UTIL_H
 
 #include <array>
+#include <algorithm>
 #include "Piece.h"
 
 namespace Util {

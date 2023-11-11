@@ -92,9 +92,9 @@ int Search::alphaBeta(int depth, int alpha, int beta, int ply) {
         //threefold repetition
         else {
             int repetitions = 1;
-            for (int j = board.positionHistory.size() - 1;
+            for (int j = board.positionHistory.size() - 4;
                  j >= 0 && (board.irreversibleIndices.empty() || board.irreversibleIndices.back() < j);
-                 --j) {
+                 j -= 2) {
                 if (board.positionHistory[j] == board.hashCode) repetitions++;
                 if (repetitions == 3) {
                     draw = true;
@@ -283,7 +283,7 @@ void Search::storeKillerMove(Move move, int ply) {
 
 Search::Search(ChessBoard &board) : board(board) {}
 
-std::vector<Move> Search::collectPV(int depth, bool &gameOver) {
+std::vector<Move> Search::collectPV(const int depth, bool &gameOver) const {
     std::vector<Move> pv;
     std::unordered_set<unsigned long> pvPositions;
     pv.reserve(depth);
@@ -306,8 +306,8 @@ std::vector<Move> Search::collectPV(int depth, bool &gameOver) {
     return pv;
 }
 
-bool Search::getTransposition(unsigned long hash, int depth, int ply, int &score, int &alpha, int &beta,
-                              Move &hashMove) const {
+auto Search::getTransposition(const unsigned long hash, const int depth, const int ply, int&score, int&alpha, int&beta,
+                              Move&hashMove) -> bool {
 
     if (tt.contains(hash)) {
         TranspositionTable::Entry entry = tt.getEntry(hash, ply);

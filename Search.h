@@ -35,10 +35,10 @@ private:
     int quiesce(int alpha, int beta, int ply, int depth);
     std::vector<ScoredMove> scoreMoves(const std::vector<Move>& moves, int ply, Move hashMove) const;
     std::vector<ScoredMove> scoreTacticalMoves(const std::vector<Move>& moves, Move hashMove) const;
-    bool getTransposition(unsigned long int hash, int depth, int ply, int& score, int& alpha, int& beta, Move& hashMove) const;
+    static bool getTransposition(unsigned long int hash, int depth, int ply, int& score, int& alpha, int& beta, Move& hashMove) ;
     static Move selectMove(std::vector<ScoredMove>& moves, int index);
     void storeKillerMove(Move move, int ply);
-    std::vector<Move> collectPV(int depth, bool& gameOver);
+    std::vector<Move> collectPV(int depth, bool& gameOver) const;
 };
 
 #endif
