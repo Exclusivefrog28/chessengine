@@ -153,9 +153,10 @@ char *getBestMove(int seconds) {
 
 
 EMSCRIPTEN_KEEPALIVE
-void setFen(char *fen) {
+int setFen(char *fen) {
     std::string fenString(fen);
     board.setPosition(fenString);
+    return board.sideToMove;
 }
 
 EMSCRIPTEN_KEEPALIVE
