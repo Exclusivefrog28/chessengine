@@ -1,4 +1,5 @@
 #include "TranspositionTable.h"
+#include <cmath>
 
 #define MATE_SCORE 65536
 

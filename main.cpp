@@ -1,5 +1,4 @@
 #include <iostream>
-#include <emscripten/em_macros.h>
 #include "ChessBoard.h"
 #include "Piece.h"
 #include "Move.h"
@@ -7,42 +6,58 @@
 #include "MoveGenerator.h"
 #include "Evaluator.h"
 #include "Search.h"
+#include <cstring>
+
+#ifdef wasm
+#include <emscripten/em_macros.h>
+#endif
 
 ChessBoard board;
 
 extern "C" {
+#ifdef wasm
 EMSCRIPTEN_KEEPALIVE
+#endif
 void init() {
     board.hashCodes.initialize();
     board.setStartingPosition();
 }
-EMSCRIPTEN_KEEPALIVE
-char *move(int start, int end, int flag, int promotionType, int player) {
-    board.makeMove({static_cast<short>(start), static_cast<short>(end), static_cast<Pieces::Type>(promotionType),
-                    static_cast<MoveFlag>(flag), static_cast<Pieces::Color>(player)});
+
+#ifdef wasm
+    EMSCRIPTEN_KEEPALIVE
+#endif
+char* move(int start, int end, int flag, int promotionType, int player) {
+    board.makeMove({
+        static_cast<short>(start), static_cast<short>(end), static_cast<Pieces::Type>(promotionType),
+        static_cast<MoveFlag>(flag), static_cast<Pieces::Color>(player)
+    });
 
     std::string fen = board.fen();
     const int length = fen.length();
-    char *chararray = new char[length + 1];
+    char* chararray = new char[length + 1];
     strcpy(chararray, fen.c_str());
     return chararray;
 }
 
-EMSCRIPTEN_KEEPALIVE
-char *unmove() {
+#ifdef wasm
+    EMSCRIPTEN_KEEPALIVE
+#endif
+char* unmove() {
     board.unMakeMove();
 
     std::string fen = board.fen();
     const int length = fen.length();
-    char *chararray = new char[length + 1];
+    char* chararray = new char[length + 1];
     strcpy(chararray, fen.c_str());
     return chararray;
 }
 
-EMSCRIPTEN_KEEPALIVE
-char *listPieces() {
+#ifdef wasm
+    EMSCRIPTEN_KEEPALIVE
+#endif
+char* listPieces() {
     std::string string = "White pieces: ";
-    for (Piece &piece: board.whitePieces) {
+    for (Piece&piece: board.whitePieces) {
         string += "[";
         string += Util::pieceToString(piece.type, Pieces::WHITE);
         string += ", ";
@@ -50,7 +65,7 @@ char *listPieces() {
         string += "] ";
     }
     string += "\nBlack pieces:";
-    for (Piece &piece: board.blackPieces) {
+    for (Piece&piece: board.blackPieces) {
         string += "[";
         string += Util::pieceToString(piece.type, Pieces::BLACK);
         string += ", ";
@@ -60,13 +75,15 @@ char *listPieces() {
     string += "\n";
 
     const int length = string.length();
-    char *chararray = new char[length + 1];
+    char* chararray = new char[length + 1];
     strcpy(chararray, string.c_str());
     return chararray;
 }
 
-EMSCRIPTEN_KEEPALIVE
-char *getMoves() {
+#ifdef wasm
+    EMSCRIPTEN_KEEPALIVE
+#endif
+char* getMoves() {
     std::string string;
     std::vector<Move> moves = MoveGenerator::pseudoLegalMoves(board);
 
@@ -99,18 +116,21 @@ char *getMoves() {
     if (empty) {
         if (MoveGenerator::inCheck(board, board.sideToMove)) string += R"("checkmate")";
         else string += R"("stalemate")";
-    } else string += R"("normal")";
+    }
+    else string += R"("normal")";
 
     string += "}";
 
     const int length = string.length();
-    char *chararray = new char[length + 1];
+    char* chararray = new char[length + 1];
     strcpy(chararray, string.c_str());
     return chararray;
 }
 
-EMSCRIPTEN_KEEPALIVE
-char *getAttacks() {
+#ifdef wasm
+    EMSCRIPTEN_KEEPALIVE
+#endif
+char* getAttacks() {
     std::string attackedSquares;
     for (short i = 0; i < 64; ++i) {
         if (MoveGenerator::isSquareAttacked(board, i, board.sideToMove)) {
@@ -121,18 +141,22 @@ char *getAttacks() {
     if (!attackedSquares.empty()) attackedSquares.pop_back();
 
     const int length = attackedSquares.length();
-    char *chararray = new char[length + 1];
+    char* chararray = new char[length + 1];
     strcpy(chararray, attackedSquares.c_str());
     return chararray;
 }
 
-EMSCRIPTEN_KEEPALIVE
+#ifdef wasm
+    EMSCRIPTEN_KEEPALIVE
+#endif
 int eval() {
     return Evaluator::evaluate(board);
 }
 
-EMSCRIPTEN_KEEPALIVE
-char *getBestMove(int seconds) {
+#ifdef wasm
+    EMSCRIPTEN_KEEPALIVE
+#endif
+char* getBestMove(int seconds) {
     Move bestMove = Search::search(board, seconds);
     std::string bestMoveJSON = R"({"start":")";
     bestMoveJSON += Util::positionToString(bestMove.start);
@@ -146,28 +170,34 @@ char *getBestMove(int seconds) {
     bestMoveJSON += std::to_string(bestMove.player);
     bestMoveJSON += "\"}";
     const int length = bestMoveJSON.length();
-    char *chararray = new char[length + 1];
+    char* chararray = new char[length + 1];
     strcpy(chararray, bestMoveJSON.c_str());
     return chararray;
 }
 
 
-EMSCRIPTEN_KEEPALIVE
-int setFen(char *fen) {
+#ifdef wasm
+    EMSCRIPTEN_KEEPALIVE
+#endif
+int setFen(char* fen) {
     std::string fenString(fen);
     board.setPosition(fenString);
     return board.sideToMove;
 }
 
-EMSCRIPTEN_KEEPALIVE
-int runPerft(int depth, const char *fen) {
+#ifdef wasm
+    EMSCRIPTEN_KEEPALIVE
+#endif
+int runPerft(int depth, const char* fen) {
     ChessBoard perftBoard;
     perftBoard.setPosition(fen);
 
     return MoveGenerator::perft(depth, perftBoard);
 }
 
-EMSCRIPTEN_KEEPALIVE
+#ifdef wasm
+    EMSCRIPTEN_KEEPALIVE
+#endif
 int main() {
     return 0;
 }

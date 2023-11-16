@@ -3,6 +3,7 @@
 #include "MoveGenerator.h"
 #include "TranspositionTable.h"
 #include <unordered_set>
+#include <chrono>
 
 #define MATE_SCORE 65536
 
