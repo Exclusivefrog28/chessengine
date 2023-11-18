@@ -9,15 +9,14 @@
 
 TranspositionTable Search::tt = TranspositionTable();
 
-Moves::Move Search::search(ChessBoard &board, int timeOut) {
-
-    int alpha = INT32_MIN + 1;
-    int beta = INT32_MAX;
+Moves::Move Search::search(ChessBoard&board, int timeOut) {
+    constexpr int alpha = INT32_MIN + 1;
+    constexpr int beta = INT32_MAX;
 
     Search search = Search(board);
 
-    std::chrono::time_point<std::chrono::steady_clock> startTime = std::chrono::steady_clock::now();
-    std::chrono::seconds timeLimit(timeOut);
+    const std::chrono::time_point<std::chrono::steady_clock> startTime = std::chrono::steady_clock::now();
+    const std::chrono::seconds timeLimit(timeOut);
 
     int i = 1;
 
@@ -28,14 +27,14 @@ Moves::Move Search::search(ChessBoard &board, int timeOut) {
             search.lastPV = search.collectPV(i - 1, gameOver);
             if (gameOver) break;
 
-//            double branchingFactor = static_cast<double>(search.nodeCount) / search.previousNodeCount;
-//            search.previousNodeCount = search.nodeCount;
-//            double predictedNodes = search.nodeCount * branchingFactor;
-//            std::chrono::duration<double> elapsedTime = std::chrono::steady_clock::now() - startTime;
-//            std::chrono::duration<double> predictedTime =
-//                    elapsedTime * (static_cast<double>(predictedNodes / search.nodeCount));
-//
-//            if (elapsedTime + predictedTime > timeLimit) break;
+            //            double branchingFactor = static_cast<double>(search.nodeCount) / search.previousNodeCount;
+            //            search.previousNodeCount = search.nodeCount;
+            //            double predictedNodes = search.nodeCount * branchingFactor;
+            //            std::chrono::duration<double> elapsedTime = std::chrono::steady_clock::now() - startTime;
+            //            std::chrono::duration<double> predictedTime =
+            //                    elapsedTime * (static_cast<double>(predictedNodes / search.nodeCount));
+            //
+            //            if (elapsedTime + predictedTime > timeLimit) break;
 
             if ((timeSpent * 2) > timeLimit) break;
         }
@@ -43,7 +42,7 @@ Moves::Move Search::search(ChessBoard &board, int timeOut) {
     }
 
     printf("Depth: %d\nPV: ", i - 1);
-    for (const Move &move: search.lastPV) {
+    for (const Move&move: search.lastPV) {
         printf("%s%s ", Util::positionToString(move.start).c_str(), Util::positionToString(move.end).c_str());
     }
     printf("\nTT reads: %d", tt.reads);
@@ -97,14 +96,14 @@ int Search::alphaBeta(int depth, int alpha, int beta, int ply) {
                  j >= 0 && (board.irreversibleIndices.empty() || board.irreversibleIndices.back() < j);
                  j -= 2) {
                 if (board.positionHistory[j] == board.hashCode) repetitions++;
-                if (repetitions == 3) {
+                if (repetitions == 2) {
                     draw = true;
                     break;
                 }
             }
         }
 
-        int score = (draw) ? 0 : -alphaBeta(depth - 1, -beta, -alpha, ply + 1);
+        const int score = (draw) ? 0 : -alphaBeta(depth - 1, -beta, -alpha, ply + 1);
 
         board.unMakeMove();
 
@@ -123,18 +122,18 @@ int Search::alphaBeta(int depth, int alpha, int beta, int ply) {
             bestScore = score;
             bestMove = move;
             nodeType = TranspositionTable::EXACT;
-
-        } else if (score > bestScore) {
+        }
+        else if (score > bestScore) {
             bestScore = score;
             bestMove = move;
         }
     }
     if (!hasLegalMoves) {
         if (MoveGenerator::inCheck(board, board.sideToMove)) return -(MATE_SCORE - ply);
-        else return 0;
-    } else {
-        tt.setEntry(board.hashCode, {board.hashCode, bestMove, depth, bestScore, nodeType}, ply);
+        return 0;
     }
+
+    tt.setEntry(board.hashCode, {board.hashCode, bestMove, depth, bestScore, nodeType}, ply);
 
     return alpha;
 }
@@ -180,7 +179,8 @@ int Search::quiesce(int alpha, int beta, int ply, int depth) {
             bestScore = score;
             bestMove = move;
             nodeType = TranspositionTable::EXACT;
-        } else if (score > bestScore) {
+        }
+        else if (score > bestScore) {
             bestScore = score;
             bestMove = move;
         }
@@ -190,11 +190,10 @@ int Search::quiesce(int alpha, int beta, int ply, int depth) {
     return alpha;
 }
 
-std::vector<ScoredMove> Search::scoreMoves(const std::vector<Move> &moves, int ply, Move hashMove) const {
-
+std::vector<ScoredMove> Search::scoreMoves(const std::vector<Move>&moves, int ply, Move hashMove) const {
     std::vector<ScoredMove> scoredMoves;
 
-    for (const Move &move: moves) {
+    for (const Move&move: moves) {
         int score = 0;
         int captureScore = 0;
 
@@ -204,11 +203,13 @@ std::vector<ScoredMove> Search::scoreMoves(const std::vector<Move> &moves, int p
 
         else if (move.promotionType != 0) {
             score = EvaluationValues::mg_value[move.promotionType - 1] - EvaluationValues::mg_value[0];
-        } else if (move.flag == 0 || move.flag >= 7) {
+        }
+        else if (move.flag == 0 || move.flag >= 7) {
             if (move == killerMoves[ply][0] || move == killerMoves[ply][1])
                 score = 1 << 14;
             else score = history[board.sideToMove][move.start][move.end];
-        } else {
+        }
+        else {
             if (move.flag == 6) score = 1 << 16;
             else {
                 int agressor = EvaluationValues::mg_value[board.squares[move.start].type - 1];
@@ -225,12 +226,11 @@ std::vector<ScoredMove> Search::scoreMoves(const std::vector<Move> &moves, int p
     return scoredMoves;
 }
 
-std::vector<ScoredMove> Search::scoreTacticalMoves(const std::vector<Move> &moves, Move hashMove) const {
-
+std::vector<ScoredMove> Search::scoreTacticalMoves(const std::vector<Move>&moves, Move hashMove) const {
     std::vector<ScoredMove> scoredMoves;
 
 
-    for (const Move &move: moves) {
+    for (const Move&move: moves) {
         int score;
 
         if (move == hashMove) score = 1 << 30;
@@ -247,8 +247,7 @@ std::vector<ScoredMove> Search::scoreTacticalMoves(const std::vector<Move> &move
     return scoredMoves;
 }
 
-Move Search::selectMove(std::vector<ScoredMove> &moves, int index) {
-
+Move Search::selectMove(std::vector<ScoredMove>&moves, int index) {
     int selectedIndex = index;
     ScoredMove selected = moves[selectedIndex];
     int maxScore = selected.score;
@@ -268,23 +267,24 @@ Move Search::selectMove(std::vector<ScoredMove> &moves, int index) {
 
 void Search::storeKillerMove(Move move, int ply) {
     if ((move.flag == 0 || move.flag >= 7) && move.promotionType == 0) {
-
         if (killerMoves[ply][0] == move) return;
         if (killerMoves[ply][1] == move) return;
 
         if (killerMoveIndexOne || killerMoves[ply][0] == NULL_MOVE) {
             killerMoves[ply][0] = move;
             killerMoveIndexOne = false;
-        } else {
+        }
+        else {
             killerMoves[ply][1] = move;
             killerMoveIndexOne = true;
         }
     }
 }
 
-Search::Search(ChessBoard &board) : board(board) {}
+Search::Search(ChessBoard&board) : board(board) {
+}
 
-std::vector<Move> Search::collectPV(const int depth, bool &gameOver) const {
+std::vector<Move> Search::collectPV(const int depth, bool&gameOver) const {
     std::vector<Move> pv;
     std::unordered_set<unsigned long> pvPositions;
     pv.reserve(depth);
@@ -309,7 +309,6 @@ std::vector<Move> Search::collectPV(const int depth, bool &gameOver) const {
 
 auto Search::getTransposition(const unsigned long hash, const int depth, const int ply, int&score, int&alpha, int&beta,
                               Move&hashMove) -> bool {
-
     if (tt.contains(hash)) {
         TranspositionTable::Entry entry = tt.getEntry(hash, ply);
         if (entry.depth >= depth) {

@@ -8,6 +8,8 @@
 #include "Search.h"
 #include <cstring>
 
+#include "CLI.h"
+
 #ifdef wasm
 #include <emscripten/em_macros.h>
 #endif
@@ -199,6 +201,7 @@ int runPerft(int depth, const char* fen) {
     EMSCRIPTEN_KEEPALIVE
 #endif
 int main() {
+    // Interface::CLI::start();
     return 0;
 }
 }
