@@ -41,7 +41,13 @@ Moves::Move Search::search(ChessBoard&board, int timeOut) {
         search.alphaBeta(i, alpha, beta, 0);
     }
 
-    printf("Depth: %d\nPV: ", i - 1);
+    printf("Depth: %d\n", i - 1);
+    int score = Evaluator::evaluate(board);
+    if(tt.contains(board.hashCode)) {
+        TranspositionTable::Entry entry = tt.getEntry(board.hashCode, 0);
+        score = entry.score;
+    }
+    printf("Evaluation: %d\nPV:", score);
     for (const Move&move: search.lastPV) {
         printf("%s%s ", Util::positionToString(move.start).c_str(), Util::positionToString(move.end).c_str());
     }

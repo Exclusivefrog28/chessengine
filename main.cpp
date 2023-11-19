@@ -26,7 +26,7 @@ void init() {
 }
 
 #ifdef wasm
-    EMSCRIPTEN_KEEPALIVE
+EMSCRIPTEN_KEEPALIVE
 #endif
 char* move(int start, int end, int flag, int promotionType, int player) {
     board.makeMove({
@@ -42,7 +42,7 @@ char* move(int start, int end, int flag, int promotionType, int player) {
 }
 
 #ifdef wasm
-    EMSCRIPTEN_KEEPALIVE
+EMSCRIPTEN_KEEPALIVE
 #endif
 char* unmove() {
     board.unMakeMove();
@@ -55,7 +55,7 @@ char* unmove() {
 }
 
 #ifdef wasm
-    EMSCRIPTEN_KEEPALIVE
+EMSCRIPTEN_KEEPALIVE
 #endif
 char* listPieces() {
     std::string string = "White pieces: ";
@@ -83,7 +83,7 @@ char* listPieces() {
 }
 
 #ifdef wasm
-    EMSCRIPTEN_KEEPALIVE
+EMSCRIPTEN_KEEPALIVE
 #endif
 char* getMoves() {
     std::string string;
@@ -130,7 +130,7 @@ char* getMoves() {
 }
 
 #ifdef wasm
-    EMSCRIPTEN_KEEPALIVE
+EMSCRIPTEN_KEEPALIVE
 #endif
 char* getAttacks() {
     std::string attackedSquares;
@@ -149,14 +149,22 @@ char* getAttacks() {
 }
 
 #ifdef wasm
-    EMSCRIPTEN_KEEPALIVE
+EMSCRIPTEN_KEEPALIVE
 #endif
 int eval() {
-    return Evaluator::evaluate(board);
+    int score;
+    if (Search::tt.contains(board.hashCode)) {
+        TranspositionTable::Entry entry = Search::tt.getEntry(board.hashCode, 0);
+        score = entry.score;
+    }
+    else {
+        score = Evaluator::evaluate(board);
+    }
+    return score;
 }
 
 #ifdef wasm
-    EMSCRIPTEN_KEEPALIVE
+EMSCRIPTEN_KEEPALIVE
 #endif
 char* getBestMove(int seconds) {
     Move bestMove = Search::search(board, seconds);
@@ -179,7 +187,7 @@ char* getBestMove(int seconds) {
 
 
 #ifdef wasm
-    EMSCRIPTEN_KEEPALIVE
+EMSCRIPTEN_KEEPALIVE
 #endif
 int setFen(char* fen) {
     std::string fenString(fen);
@@ -188,7 +196,7 @@ int setFen(char* fen) {
 }
 
 #ifdef wasm
-    EMSCRIPTEN_KEEPALIVE
+EMSCRIPTEN_KEEPALIVE
 #endif
 int runPerft(int depth, const char* fen) {
     ChessBoard perftBoard;
@@ -198,7 +206,7 @@ int runPerft(int depth, const char* fen) {
 }
 
 #ifdef wasm
-    EMSCRIPTEN_KEEPALIVE
+EMSCRIPTEN_KEEPALIVE
 #endif
 int main() {
     // Interface::CLI::start();

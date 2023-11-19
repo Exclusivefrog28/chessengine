@@ -17,6 +17,7 @@ class Search {
 
 public:
     ChessBoard&  board;
+    static TranspositionTable tt;
 
     explicit Search(ChessBoard &board);
 
@@ -28,8 +29,6 @@ private:
     bool killerMoveIndexOne = false;
     std::array<std::array<std::array<int, 64>,64>,2> history{};
     std::vector<Move> lastPV;
-
-    static TranspositionTable tt;
 
     int alphaBeta(int depth, int alpha, int beta, int ply);
     int quiesce(int alpha, int beta, int ply, int depth);
