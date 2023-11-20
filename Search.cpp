@@ -9,7 +9,7 @@
 
 TranspositionTable Search::tt = TranspositionTable();
 
-Moves::Move Search::search(ChessBoard&board, int timeOut) {
+Move Search::search(ChessBoard&board, const int timeOut) {
 	constexpr int alpha = INT32_MIN + 1;
 	constexpr int beta = INT32_MAX;
 
@@ -40,11 +40,11 @@ Moves::Move Search::search(ChessBoard&board, int timeOut) {
 		}
 		search.alphaBeta(i, alpha, beta, 0);
 	}
-
+#ifdef wasm
 	printf("Depth: %d\n", i - 1);
 	int score = Evaluator::evaluate(board);
 	if (tt.contains(board.hashCode)) {
-		TranspositionTable::Entry entry = tt.getEntry(board.hashCode, 0);
+		const TranspositionTable::Entry entry = tt.getEntry(board.hashCode, 0);
 		score = entry.score;
 	}
 	printf("Evaluation: %d\nPV:", score);
@@ -55,12 +55,13 @@ Moves::Move Search::search(ChessBoard&board, int timeOut) {
 	printf("\nTT writes: %d", tt.writes);
 	printf("\nTT collisions: %d", tt.collisions);
 	printf("\n**************************\n");
+#endif
 	tt.resetCounters();
 
 	return search.lastPV[0];
 }
 
-int Search::alphaBeta(int depth, int alpha, int beta, int ply) {
+int Search::alphaBeta(const int depth, int alpha, int beta, const int ply) {
 	if (depth == 0) return quiesce(alpha, beta, ply, 0);
 
 	Move hashMove{};
@@ -143,18 +144,18 @@ int Search::alphaBeta(int depth, int alpha, int beta, int ply) {
 		return 0;
 	}
 
-	if(!noStore) tt.setEntry(board.hashCode, {board.hashCode, bestMove, depth, bestScore, nodeType}, ply);
+	if (!noStore) tt.setEntry(board.hashCode, {board.hashCode, bestMove, depth, bestScore, nodeType}, ply);
 
 	return alpha;
 }
 
-int Search::quiesce(int alpha, int beta, int ply, int depth) {
-	int stand_pat = Evaluator::evaluate(board);
+int Search::quiesce(int alpha, int beta, const int ply, const int depth) {
+	const int stand_pat = Evaluator::evaluate(board);
 	if (stand_pat >= beta)
 		return beta;
 	if (alpha < stand_pat)
 		alpha = stand_pat;
-	if (stand_pat + EvaluationValues::mg_value[QUEEN - 1] < alpha) {
+	if (stand_pat + mg_value[QUEEN - 1] < alpha) {
 		return alpha;
 	}
 
@@ -212,7 +213,7 @@ std::vector<ScoredMove> Search::scoreMoves(const std::vector<Move>&moves, int pl
 		else if (move == hashMove) score = 1 << 30;
 
 		else if (move.promotionType != 0) {
-			score = EvaluationValues::mg_value[move.promotionType - 1] - EvaluationValues::mg_value[0];
+			score = mg_value[move.promotionType - 1] - mg_value[0];
 		}
 		else if (move.flag == 0 || move.flag >= 7) {
 			if (move == killerMoves[ply][0] || move == killerMoves[ply][1])
@@ -222,8 +223,8 @@ std::vector<ScoredMove> Search::scoreMoves(const std::vector<Move>&moves, int pl
 		else {
 			if (move.flag == 6) score = 1 << 16;
 			else {
-				int agressor = EvaluationValues::mg_value[board.squares[move.start].type - 1];
-				int victim = EvaluationValues::mg_value[move.flag - 1];
+				int agressor = mg_value[board.squares[move.start].type - 1];
+				int victim = mg_value[move.flag - 1];
 				captureScore += victim - agressor;
 				if (captureScore == 0) captureScore = 1;
 				if (captureScore > 0) captureScore <<= 16;
@@ -246,10 +247,10 @@ std::vector<ScoredMove> Search::scoreTacticalMoves(const std::vector<Move>&moves
 		if (move == hashMove) score = 1 << 30;
 		else {
 			if (move.promotionType != 0)
-				score = EvaluationValues::mg_value[move.promotionType - 1] - EvaluationValues::mg_value[0];
+				score = mg_value[move.promotionType - 1] - mg_value[0];
 			else
-				score = EvaluationValues::mg_value[move.flag - 1] -
-				        EvaluationValues::mg_value[board.squares[move.start].type - 1];
+				score = mg_value[move.flag - 1] -
+				        mg_value[board.squares[move.start].type - 1];
 		}
 
 		scoredMoves.push_back({move, score});

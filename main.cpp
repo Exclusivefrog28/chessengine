@@ -28,13 +28,13 @@ void init() {
 #ifdef wasm
 EMSCRIPTEN_KEEPALIVE
 #endif
-char* move(int start, int end, int flag, int promotionType, int player) {
+char* move(const int start, const int end, int flag, int promotionType, int player) {
     board.makeMove({
         static_cast<short>(start), static_cast<short>(end), static_cast<Pieces::Type>(promotionType),
         static_cast<MoveFlag>(flag), static_cast<Pieces::Color>(player)
     });
 
-    std::string fen = board.fen();
+    const std::string fen = board.fen();
     const int length = fen.length();
     char* chararray = new char[length + 1];
     strcpy(chararray, fen.c_str());
@@ -47,7 +47,7 @@ EMSCRIPTEN_KEEPALIVE
 char* unmove() {
     board.unMakeMove();
 
-    std::string fen = board.fen();
+    const std::string fen = board.fen();
     const int length = fen.length();
     char* chararray = new char[length + 1];
     strcpy(chararray, fen.c_str());
@@ -209,7 +209,10 @@ int runPerft(int depth, const char* fen) {
 EMSCRIPTEN_KEEPALIVE
 #endif
 int main() {
-    // Interface::CLI::start();
+#ifndef wasm
+    Interface::CLI interface;
+    interface.start();
+#endif
     return 0;
 }
 }

@@ -4,45 +4,51 @@
 #include <unordered_map>
 #include <vector>
 
+#include "ChessBoard.h"
+
 //Universal Chess Interface implementation
 namespace Interface {
-    enum Command {
-        invalid,
-        uci,
-        isready,
-        ucinewgame,
-        position,
-        go,
-        stop,
-        ponderhit,
-        quit
-    };
+	enum Command {
+		invalid,
+		uci,
+		isready,
+		ucinewgame,
+		position,
+		go,
+		stop,
+		ponderhit,
+		quit
+	};
 
-    struct Instruction {
-        Command command;
-        std::vector<std::string> arguments;
-    };
+	struct Instruction {
+		Command command;
+		std::vector<std::string> args;
+	};
 
-    const inline std::unordered_map<std::string, Command> commandMap = {
-        {"quit", Command::quit},
-        {"uci", Command::uci},
-        {"isready", Command::isready},
-        {"ucinewgame", Command::ucinewgame},
-        {"position", Command::position},
-        {"go", Command::go},
-        {"stop", Command::stop},
-        {"ponderhit", Command::ponderhit}
-    };
+	const inline std::unordered_map<std::string, Command> commandMap = {
+		{"quit", quit},
+		{"uci", uci},
+		{"isready", isready},
+		{"ucinewgame", ucinewgame},
+		{"position", position},
+		{"go", go},
+		{"stop", stop},
+		{"ponderhit", ponderhit}
+	};
 
-    class CLI {
-    public:
-        static void start();
+	class CLI {
+	public:
+		void start();
 
-    private:
-        static Instruction interpret(const std::string&string);
+	private:
+		ChessBoard board;
 
-        static void handleInstruction(const Instruction&instr);
-    };
+		static Instruction interpret(const std::string&string);
+
+		static Move parseMove(const std::string&string, const ChessBoard&board);
+
+		void handleInstruction(const Instruction&instr);
+	};
 }
 
 #endif //INTERFACE_H
