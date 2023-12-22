@@ -4,41 +4,41 @@
 #include "TranspositionTable.h"
 #include <unordered_set>
 #include <chrono>
+#include <thread>
 
 #define MATE_SCORE 65536
 
 TranspositionTable Search::tt = TranspositionTable();
 
-Move Search::search(ChessBoard&board, const int timeOut) {
-	constexpr int alpha = INT32_MIN + 1;
-	constexpr int beta = INT32_MAX;
-
+Move Search::search(ChessBoard&board, const int timeAllowed) {
 	Search search = Search(board);
 
-	const std::chrono::time_point<std::chrono::steady_clock> startTime = std::chrono::steady_clock::now();
-	const std::chrono::seconds timeLimit(timeOut);
+	const auto timeOut = std::chrono::seconds(timeAllowed);
+
+	const auto start = std::chrono::steady_clock::now();
 
 	int i = 1;
-
 	for (;; ++i) {
-		if (i > 1) {
-			std::chrono::duration<double> timeSpent = std::chrono::steady_clock::now() - startTime;
-			bool gameOver = false;
-			search.lastPV = search.collectPV(i - 1, gameOver);
-			if (gameOver) break;
+		std::thread thread(&Search::threadedSearch, &search, i);
 
-			//            double branchingFactor = static_cast<double>(search.nodeCount) / search.previousNodeCount;
-			//            search.previousNodeCount = search.nodeCount;
-			//            double predictedNodes = search.nodeCount * branchingFactor;
-			//            std::chrono::duration<double> elapsedTime = std::chrono::steady_clock::now() - startTime;
-			//            std::chrono::duration<double> predictedTime =
-			//                    elapsedTime * (static_cast<double>(predictedNodes / search.nodeCount));
-			//
-			//            if (elapsedTime + predictedTime > timeLimit) break;
+		std::unique_lock<std::mutex> lk(search.cv_m);
+		search.stop = false;
+		search.finished = false;
 
-			if ((timeSpent * 2) > timeLimit) break;
+		const auto timeAvailable = start + timeOut - std::chrono::steady_clock::now();
+
+		if (search.cv.wait_for(lk, timeAvailable, [&] { return search.finished; })) {
+			thread.join();
 		}
-		search.alphaBeta(i, alpha, beta, 0);
+		else {
+			search.stop = true;
+			thread.detach();
+			break;
+		}
+
+		bool gameOver = false;
+		search.lastPV = search.collectPV(i, gameOver);
+		if (gameOver) break;
 	}
 #ifdef wasm
 	printf("Depth: %d\n", i - 1);
@@ -56,12 +56,24 @@ Move Search::search(ChessBoard&board, const int timeOut) {
 	printf("\nTT collisions: %d", tt.collisions);
 	printf("\n**************************\n");
 #endif
-	tt.resetCounters();
 
+	tt.resetCounters();
 	return search.lastPV[0];
 }
 
+void Search::threadedSearch(int depth) {
+	constexpr int alpha = INT32_MIN + 1;
+	constexpr int beta = INT32_MAX;
+
+	alphaBeta(depth, alpha, beta, 0); {
+		std::lock_guard<std::mutex> lk(cv_m);
+		finished = true;
+	}
+	cv.notify_one();
+}
+
 int Search::alphaBeta(const int depth, int alpha, int beta, const int ply) {
+	if (stop) { return 0; }
 	if (depth == 0) return quiesce(alpha, beta, ply, 0);
 
 	Move hashMove{};
@@ -84,7 +96,6 @@ int Search::alphaBeta(const int depth, int alpha, int beta, const int ply) {
 
 	for (int i = 0; i < moves.size(); i++) {
 		Move move = selectMove(moves, i);
-
 		board.makeMove(move);
 		if (MoveGenerator::inCheck(board, invertColor(board.sideToMove))) {
 			board.unMakeMove();
@@ -115,8 +126,10 @@ int Search::alphaBeta(const int depth, int alpha, int beta, const int ply) {
 		}
 
 		const int score = (draw) ? 0 : -alphaBeta(depth - 1, -beta, -alpha, ply + 1);
-
 		board.unMakeMove();
+
+		if (stop) return 0;
+
 
 		if (score >= beta) {
 			if (move.flag == 0 || move.flag >= 7) {
@@ -150,6 +163,7 @@ int Search::alphaBeta(const int depth, int alpha, int beta, const int ply) {
 }
 
 int Search::quiesce(int alpha, int beta, const int ply, const int depth) {
+	if (stop) return 0;
 	const int stand_pat = Evaluator::evaluate(board);
 	if (stand_pat >= beta)
 		return beta;
@@ -180,6 +194,7 @@ int Search::quiesce(int alpha, int beta, const int ply, const int depth) {
 		}
 		int score = -quiesce(-beta, -alpha, ply + 1, depth - 1);
 		board.unMakeMove();
+		if (stop) return 0;
 
 		if (score >= beta) {
 			tt.setEntry(board.hashCode, {board.hashCode, move, depth, score, TranspositionTable::LOWERBOUND}, ply);

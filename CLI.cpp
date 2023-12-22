@@ -56,7 +56,7 @@ namespace Interface {
 				if (startPos / 8 == 2 && endPos / 8 == 4 || startPos / 8 == 7 && endPos / 8 == 5) {
 					flag = DOUBLEPAWNPUSH;
 				}
-				if (abs(startPos - endPos == 7) || abs(startPos - endPos == 9)) {
+				if (abs(startPos - endPos) == 7 || abs(startPos - endPos) == 9) {
 					flag = ENPASSANT;
 				}
 			}
@@ -112,7 +112,17 @@ namespace Interface {
 				break;
 			}
 			case go: {
-				const Move bestMove = Search::search(board, 1);
+				int timeOut = 3;
+
+				for (int i = 0; i < instr.args.size(); ++i) {
+					std::string arg = instr.args[i];
+					if (arg == "movetime") {
+						timeOut = std::stoi(instr.args[i + 1]);
+						i++;
+					}
+				}
+
+				const Move bestMove = Search::search(board, timeOut);
 				std::cout << "bestmove " << Util::positionToString(bestMove.start) << Util::positionToString(bestMove.end) << "\n";
 				break;
 			}

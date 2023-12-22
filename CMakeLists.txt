@@ -31,7 +31,8 @@ if (WASM)
     message("Building for Webassembly")
     add_compile_definitions(wasm)
     set_target_properties(ChessEngine PROPERTIES
-            LINK_FLAGS "-s WASM=1 -O3 -s ENVIRONMENT=web -s INITIAL_MEMORY=512MB -s STACK_SIZE=256MB -s ALLOW_MEMORY_GROWTH -s EXPORTED_FUNCTIONS=['_main','_init','_move','_unmove','_listPieces','_getMoves','_getAttacks','_setFen','_runPerft','_eval','_getBestMove'] -s EXPORTED_RUNTIME_METHODS=['ccall','cwrap']"
+            LINK_FLAGS "-s WASM=1 -O3 -s ENVIRONMENT=web,worker -pthread -s PTHREAD_POOL_SIZE=8 -s INITIAL_MEMORY=512MB -s STACK_SIZE=256MB -s ALLOW_MEMORY_GROWTH -s EXPORTED_FUNCTIONS=['_main','_init','_move','_unmove','_listPieces','_getMoves','_getAttacks','_setFen','_runPerft','_eval','_getBestMove'] -s EXPORTED_RUNTIME_METHODS=['ccall','cwrap']"
+            COMPILE_FLAGS "-pthread"
     )
 endif ()
 
