@@ -36,6 +36,9 @@ if (WASM)
     )
 endif ()
 
+if (NOT WASM)
+    set(CMAKE_EXE_LINKER_FLAGS "-static")
+endif ()
 
 #-s ENVIRONMENT=web / -s ENVIRONMENT=node
 #--profiling -g -s ASSERTIONS

@@ -9,8 +9,8 @@
 namespace Interface {
 	void CLI::start() {
 		board.hashCodes.initialize();
-		std::cout << "Hello Chess!\n";
-		std::cout << "Waiting for next command...\n";
+		std::cout << "Hello Chess!" << std::endl;
+		std::cout << "Waiting for next command..." << std::endl;
 		Instruction currentInstruction;
 		while (currentInstruction.command != quit) {
 			std::string input;
@@ -81,12 +81,12 @@ namespace Interface {
 	void CLI::handleInstruction(const Instruction&instr) {
 		switch (instr.command) {
 			case uci:
-				std::cout << "id name " << "EngineName\n";
-				std::cout << "id author " << "Exclusivefrog28\n";
-				std::cout << "uciok\n";
+				std::cout << "id name " << "EngineName" << std::endl;
+				std::cout << "id author " << "Exclusivefrog28" << std::endl;
+				std::cout << "uciok" << std::endl;
 				break;
 			case isready:
-				std::cout << "readyok\n";
+				std::cout << "readyok" << std::endl;
 				break;
 			case ucinewgame:
 				Search::tt = TranspositionTable();
@@ -112,7 +112,7 @@ namespace Interface {
 				break;
 			}
 			case go: {
-				int timeOut = 3;
+				int timeOut = 3000;
 
 				for (int i = 0; i < instr.args.size(); ++i) {
 					std::string arg = instr.args[i];
@@ -123,7 +123,7 @@ namespace Interface {
 				}
 
 				const Move bestMove = Search::search(board, timeOut);
-				std::cout << "bestmove " << Util::positionToString(bestMove.start) << Util::positionToString(bestMove.end) << "\n";
+				std::cout << "bestmove " << Util::positionToString(bestMove.start) << Util::positionToString(bestMove.end) << std::endl;
 				break;
 			}
 			default:

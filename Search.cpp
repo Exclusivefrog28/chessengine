@@ -13,7 +13,7 @@ TranspositionTable Search::tt = TranspositionTable();
 Move Search::search(ChessBoard&board, const int timeAllowed) {
 	Search search = Search(board);
 
-	const auto timeOut = std::chrono::seconds(timeAllowed);
+	const auto timeOut = std::chrono::milliseconds(timeAllowed);
 
 	const auto start = std::chrono::steady_clock::now();
 
