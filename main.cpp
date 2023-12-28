@@ -166,8 +166,8 @@ int eval() {
 #ifdef wasm
 EMSCRIPTEN_KEEPALIVE
 #endif
-char* getBestMove(int seconds) {
-	Move bestMove = Search::search(board, seconds);
+char* getBestMove(int milliseconds) {
+	Move bestMove = Search::search(board, milliseconds);
 	std::string bestMoveJSON = R"({"start":")";
 	bestMoveJSON += Util::positionToString(bestMove.start);
 	bestMoveJSON += R"(","end":")";

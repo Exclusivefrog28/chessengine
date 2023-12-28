@@ -4,6 +4,7 @@
 #include <unordered_map>
 #include <thread>
 
+#include "MoveGenerator.h"
 #include "Search.h"
 
 namespace Interface {
@@ -114,16 +115,40 @@ namespace Interface {
 			case go: {
 				int timeOut = 3000;
 
-				for (int i = 0; i < instr.args.size(); ++i) {
-					std::string arg = instr.args[i];
-					if (arg == "movetime") {
-						timeOut = std::stoi(instr.args[i + 1]);
-						i++;
-					}
+				const std::string arg = instr.args[0];
+				if (arg == "movetime") {
+					timeOut = std::stoi(instr.args[1]);
+				}
+				else if (arg == "perft") {
+					const int depth = std::stoi(instr.args[1]);
+					const unsigned long long nodes = MoveGenerator::perft(depth, board);
+					std::cout << nodes << std::endl;
+					break;
 				}
 
 				const Move bestMove = Search::search(board, timeOut);
-				std::cout << "bestmove " << Util::positionToString(bestMove.start) << Util::positionToString(bestMove.end) << std::endl;
+				std::cout << board.fen() << std::endl;
+
+				const std::string promotion = (bestMove.promotionType != EMPTY) ? Util::pieceToString(bestMove.promotionType, BLACK) : "";
+
+				bool legal = false;
+				for (const auto moves = MoveGenerator::pseudoLegalMoves(board); const Move&move: moves) {
+					if (move == bestMove) {
+						legal = true;
+						break;
+					}
+				}
+				if (legal) {
+					legal = MoveGenerator::isLegalMove(board, bestMove);
+				}
+
+				if (!legal) {
+					std::cout << Util::positionToString(bestMove.start) << Util::positionToString(bestMove.end) << " " << bestMove.flag << std::endl;
+				}
+				else {
+					std::cout << "bestmove " << Util::positionToString(bestMove.start) << Util::positionToString(bestMove.end) << promotion << std::endl;
+				}
+
 				break;
 			}
 			default:

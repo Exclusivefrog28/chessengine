@@ -4,6 +4,7 @@
 #include "TranspositionTable.h"
 #include <unordered_set>
 #include <chrono>
+#include <string>
 #include <thread>
 
 #define MATE_SCORE 65536
@@ -17,6 +18,11 @@ Move Search::search(ChessBoard& board, const int timeAllowed)
     const auto timeOut = std::chrono::milliseconds(timeAllowed);
 
     const auto start = std::chrono::steady_clock::now();
+
+    printf(board.fen().c_str());
+    printf("\n");
+    printf(std::to_string(board.hashCode).c_str());
+    printf("\n");
 
     int i = 1;
     for (;; ++i)
@@ -51,7 +57,7 @@ Move Search::search(ChessBoard& board, const int timeAllowed)
 		const TranspositionTable::Entry entry = tt.getEntry(board.hashCode, 0);
 		score = entry.score;
 	}
-	printf("Evaluation: %d\nPV:", score);
+	printf("Evaluation: %d\nPV: ", score);
 	for (const Move&move: search.lastPV) {
 		printf("%s%s ", Util::positionToString(move.start).c_str(), Util::positionToString(move.end).c_str());
 	}
@@ -62,8 +68,7 @@ Move Search::search(ChessBoard& board, const int timeAllowed)
 #endif
 
     tt.resetCounters();
-    std::cout << search.lastPV.size() << std::endl;
-    if (search.lastPV.size() == 0)
+    if (search.lastPV.empty())
     {
         std::cout << "problem" << std::endl;
         bool gameOver = false;
@@ -79,10 +84,10 @@ void Search::threadedSearch(int depth)
 
     alphaBeta(depth, alpha, beta, 0);
     if (stop) return;
-    {
-        std::lock_guard<std::mutex> lk(cv_m);
-        finished = true;
-    }
+
+    std::lock_guard<std::mutex> lk(cv_m);
+    finished = true;
+
     cv.notify_one();
 }
 
@@ -125,7 +130,7 @@ int Search::alphaBeta(const int depth, int alpha, int beta, const int ply)
         bool threefold = false;
         //50 move rule
         if (board.halfMoveClock >= 100 &&
-            !(board.squares[move.start].type == PAWN || (move.flag >= 1 && move.flag <= 5)))
+            !(board.squares[move.end].type == PAWN || (move.flag >= 1 && move.flag <= 5) || move.promotionType != EMPTY))
             draw = true;
         //threefold repetition
         else
@@ -223,7 +228,7 @@ int Search::quiesce(int alpha, int beta, const int ply, const int depth)
             board.unMakeMove();
             continue;
         }
-        int score = -quiesce(-beta, -alpha, ply + 1, depth - 1);
+        const int score = -quiesce(-beta, -alpha, ply + 1, depth - 1);
         board.unMakeMove();
         if (stop) return 0;
 
@@ -257,7 +262,6 @@ std::vector<ScoredMove> Search::scoreMoves(const std::vector<Move>& moves, int p
     for (const Move& move : moves)
     {
         int score = 0;
-        int captureScore = 0;
 
         if (lastPV.size() - 1 <= ply && lastPV[ply] == move) score = 1 << 31;
 
@@ -278,8 +282,9 @@ std::vector<ScoredMove> Search::scoreMoves(const std::vector<Move>& moves, int p
             if (move.flag == 6) score = 1 << 16;
             else
             {
-                int agressor = mg_value[board.squares[move.start].type - 1];
-                int victim = mg_value[move.flag - 1];
+                int captureScore = 0;
+                const int agressor = mg_value[board.squares[move.start].type - 1];
+                const int victim = mg_value[move.flag - 1];
                 captureScore += victim - agressor;
                 if (captureScore == 0) captureScore = 1;
                 if (captureScore > 0) captureScore <<= 16;
@@ -368,9 +373,9 @@ std::vector<Move> Search::collectPV(const int depth, bool& gameOver) const
     pv.reserve(depth);
 
     int pvDepth = 0;
-    while (tt.contains(board.hashCode) && pvPositions.find(board.hashCode) == pvPositions.end())
+    while (tt.contains(board.hashCode) && !pvPositions.contains(board.hashCode))
     {
-        TranspositionTable::Entry entry = tt.getEntry(board.hashCode, 0);
+        const TranspositionTable::Entry entry = tt.getEntry(board.hashCode, 0);
         if (entry.nodeType != TranspositionTable::EXACT) break;
         if (abs(entry.score) == MATE_SCORE) gameOver = true;
         Move move = entry.bestMove;
@@ -393,7 +398,7 @@ auto Search::getTransposition(const unsigned long hash, const int depth, const i
 {
     if (tt.contains(hash))
     {
-        TranspositionTable::Entry entry = tt.getEntry(hash, ply);
+        const TranspositionTable::Entry entry = tt.getEntry(hash, ply);
         if (entry.depth >= depth)
         {
             switch (entry.nodeType)
