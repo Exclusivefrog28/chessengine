@@ -10,8 +10,6 @@
 namespace Interface {
 	void CLI::start() {
 		board.hashCodes.initialize();
-		std::cout << "Hello Chess!" << std::endl;
-		std::cout << "Waiting for next command..." << std::endl;
 		Instruction currentInstruction;
 		while (currentInstruction.command != quit) {
 			std::string input;
@@ -95,14 +93,14 @@ namespace Interface {
 			case position: {
 				int startIndex = 1;
 				if (instr.args[0] == "startpos") board.setStartingPosition();
-				else {
-					const std::string fen = instr.args[0] + " " +
-					                        instr.args[1] + " " +
+				else if (instr.args[0] == "fen") {
+					const std::string fen = instr.args[1] + " " +
 					                        instr.args[2] + " " +
 					                        instr.args[3] + " " +
 					                        instr.args[4] + " " +
-					                        instr.args[5];
-					startIndex = 6;
+					                        instr.args[5] + " " +
+					                        instr.args[6];
+					startIndex = 7;
 					board.setPosition(fen);
 				}
 				if (instr.args.size() > startIndex && instr.args[startIndex] == "moves") {
@@ -126,28 +124,15 @@ namespace Interface {
 					break;
 				}
 
+				std::cout <<std::to_string(board.hashCode) << std::endl;
+				std::cout << board.fen() << std::endl;
 				const Move bestMove = Search::search(board, timeOut);
 				std::cout << board.fen() << std::endl;
 
 				const std::string promotion = (bestMove.promotionType != EMPTY) ? Util::pieceToString(bestMove.promotionType, BLACK) : "";
 
-				bool legal = false;
-				for (const auto moves = MoveGenerator::pseudoLegalMoves(board); const Move&move: moves) {
-					if (move == bestMove) {
-						legal = true;
-						break;
-					}
-				}
-				if (legal) {
-					legal = MoveGenerator::isLegalMove(board, bestMove);
-				}
+				std::cout << "bestmove " << Util::positionToString(bestMove.start) << Util::positionToString(bestMove.end) << promotion << std::endl;
 
-				if (!legal) {
-					std::cout << Util::positionToString(bestMove.start) << Util::positionToString(bestMove.end) << " " << bestMove.flag << std::endl;
-				}
-				else {
-					std::cout << "bestmove " << Util::positionToString(bestMove.start) << Util::positionToString(bestMove.end) << promotion << std::endl;
-				}
 
 				break;
 			}

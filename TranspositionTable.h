@@ -4,8 +4,8 @@
 #include <array>
 #include "Move.h"
 
-// 64 megabytes
-#define TT_SIZE (1<<21)
+// 256 megabytes
+#define TT_SIZE (1<<23)
 
 class TranspositionTable {
 public:
