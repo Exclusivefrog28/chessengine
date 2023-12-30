@@ -12,22 +12,17 @@
 
 #ifdef wasm
 #include <emscripten/em_macros.h>
-#endif
 
 ChessBoard board;
 
 extern "C" {
-#ifdef wasm
 EMSCRIPTEN_KEEPALIVE
-#endif
 void init() {
 	board.hashCodes.initialize();
 	board.setStartingPosition();
 }
 
-#ifdef wasm
 EMSCRIPTEN_KEEPALIVE
-#endif
 char* move(const int start, const int end, int flag, int promotionType, int player) {
 	board.makeMove({
 		static_cast<short>(start), static_cast<short>(end), static_cast<Pieces::Type>(promotionType),
@@ -41,9 +36,7 @@ char* move(const int start, const int end, int flag, int promotionType, int play
 	return chararray;
 }
 
-#ifdef wasm
 EMSCRIPTEN_KEEPALIVE
-#endif
 char* unmove() {
 	board.unMakeMove();
 
@@ -54,9 +47,7 @@ char* unmove() {
 	return chararray;
 }
 
-#ifdef wasm
 EMSCRIPTEN_KEEPALIVE
-#endif
 char* listPieces() {
 	std::string string = "White pieces: ";
 	for (Piece&piece: board.whitePieces) {
@@ -82,9 +73,7 @@ char* listPieces() {
 	return chararray;
 }
 
-#ifdef wasm
 EMSCRIPTEN_KEEPALIVE
-#endif
 char* getMoves() {
 	std::string string;
 	std::vector<Move> moves = MoveGenerator::pseudoLegalMoves(board);
@@ -129,9 +118,7 @@ char* getMoves() {
 	return chararray;
 }
 
-#ifdef wasm
 EMSCRIPTEN_KEEPALIVE
-#endif
 char* getAttacks() {
 	std::string attackedSquares;
 	for (short i = 0; i < 64; ++i) {
@@ -148,9 +135,8 @@ char* getAttacks() {
 	return chararray;
 }
 
-#ifdef wasm
+
 EMSCRIPTEN_KEEPALIVE
-#endif
 int eval() {
 	int score;
 	if (Search::tt.contains(board.hashCode)) {
@@ -163,9 +149,8 @@ int eval() {
 	return score;
 }
 
-#ifdef wasm
+
 EMSCRIPTEN_KEEPALIVE
-#endif
 char* getBestMove(const int milliseconds) {
 	const Move bestMove = Search::search(board, milliseconds);
 	std::string bestMoveJSON = R"({"start":")";
@@ -185,34 +170,28 @@ char* getBestMove(const int milliseconds) {
 	return chararray;
 }
 
-
-#ifdef wasm
 EMSCRIPTEN_KEEPALIVE
-#endif
 int setFen(char* fen) {
 	std::string fenString(fen);
 	board.setPosition(fenString);
 	return board.sideToMove;
 }
 
-#ifdef wasm
+
 EMSCRIPTEN_KEEPALIVE
-#endif
 int runPerft(int depth, const char* fen) {
 	ChessBoard perftBoard;
 	perftBoard.setPosition(fen);
 
 	return MoveGenerator::perft(depth, perftBoard);
 }
-
-#ifdef wasm
-EMSCRIPTEN_KEEPALIVE
+}
 #endif
+
 int main() {
 #ifndef wasm
 	Interface::CLI interface;
 	interface.start();
 #endif
 	return 0;
-}
 }

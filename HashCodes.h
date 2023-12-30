@@ -3,19 +3,20 @@
 
 #include <array>
 #include <random>
+#include <cstdint>
 
 class HashCodes {
 public:
-    unsigned long int initialCode;
-    std::array<unsigned long int, 12 * 64> pieceCodes;
-    unsigned long int blackToMoveCode;
-    std::array<unsigned long int, 16> castlingRightCodes;
-    std::array<unsigned long int, 8> enPassantFileCode;
+    uint64_t initialCode;
+    std::array<uint64_t, 12 * 64> pieceCodes;
+    uint64_t blackToMoveCode;
+    std::array<uint64_t, 16> castlingRightCodes;
+    std::array<uint64_t, 8> enPassantFileCode;
 
     void initialize() {
         std::random_device dev;
         std::mt19937_64 rng(dev());
-        std::uniform_int_distribution<unsigned long int> dist(std::numeric_limits<unsigned long int>::min(), std::numeric_limits<unsigned long int>::max());
+        std::uniform_int_distribution dist(std::numeric_limits<uint64_t>::min(), std::numeric_limits<uint64_t>::max());
 
         initialCode = dist(rng);
 
@@ -31,7 +32,7 @@ public:
         }
     }
 
-    unsigned long int pieceCode(Pieces::Type type, Pieces::Color color, short position) {
+    uint64_t pieceCode(const Pieces::Type type, const Pieces::Color color, const short position) const {
         return pieceCodes[((type - 1) * 64) + (color * 6*64) + position];
     }
 };

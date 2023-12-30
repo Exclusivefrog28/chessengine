@@ -7,6 +7,7 @@
 #include <array>
 #include <atomic>
 #include <condition_variable>
+#include <cstdint>
 
 using namespace Moves;
 
@@ -41,11 +42,11 @@ private:
 
 	int quiesce(int alpha, int beta, int ply, int depth);
 
-	std::vector<ScoredMove> scoreMoves(const std::vector<Move>&moves, int ply, Move hashMove) const;
+	std::vector<ScoredMove> scoreMoves(const std::vector<Move>&moves, int ply, const Move&hashMove) const;
 
-	std::vector<ScoredMove> scoreTacticalMoves(const std::vector<Move>&moves, Move hashMove) const;
+	std::vector<ScoredMove> scoreTacticalMoves(const std::vector<Move>&moves, const Move&hashMove) const;
 
-	static bool getTransposition(unsigned long int hash, int depth, int ply, int&score, int&alpha, int&beta, Move&hashMove);
+	static bool getTransposition(uint64_t hash, int depth, int ply, int&score, int&alpha, int&beta, Move&hashMove);
 
 	static Move selectMove(std::vector<ScoredMove>&moves, int index);
 

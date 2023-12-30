@@ -3,6 +3,9 @@
 
 #include <array>
 #include "Move.h"
+#include <cstdint>
+
+#include "ChessBoard.h"
 
 // 256 megabytes
 #define TT_SIZE (1<<23)
@@ -16,28 +19,30 @@ public:
         UPPERBOUND = 3,
     };
     struct Entry {
-        unsigned long int key;
-        Moves::Move bestMove;
+        uint64_t key;
+        Move bestMove;
         int depth;
         int score;
         NodeType nodeType;
     };
 
-    bool contains(unsigned long int key);
+    bool contains(uint64_t key);
 
-    Entry getEntry(unsigned long int key, int ply);
+    Entry getEntry(uint64_t key, int ply);
 
-    void setEntry(unsigned long int key, Entry entry, int ply);
+    void setEntry(const ChessBoard&board, Move bestMove, int depth, int score, NodeType nodeType, int ply);
 
     int reads;
     int writes;
     int collisions;
     void resetCounters();
+    int occupancy() const;
+    void clear();
 
     std::array<Entry, TT_SIZE> entries;
 
 private:
-    void write(int index, Entry entry);
+    void write(int index, const Entry&entry);
 
 
 };

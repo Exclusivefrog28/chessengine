@@ -33,9 +33,9 @@ namespace Moves {
         }
     };
 
-    const Move NULL_MOVE = Move{0, 0, Pieces::EMPTY, QUIET, Color::WHITE};
+    constexpr Move NULL_MOVE = Move{0, 0, Pieces::EMPTY, QUIET, Color::WHITE};
 
-    const short MAILBOX[120] = {
+    constexpr short MAILBOX[120] = {
             -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
             -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
             -1, 0, 1, 2, 3, 4, 5, 6, 7, -1,
@@ -50,7 +50,7 @@ namespace Moves {
             -1, -1, -1, -1, -1, -1, -1, -1, -1, -1
     };
 
-    const short MAILBOX64[64] = {
+    constexpr short MAILBOX64[64] = {
             21, 22, 23, 24, 25, 26, 27, 28,
             31, 32, 33, 34, 35, 36, 37, 38,
             41, 42, 43, 44, 45, 46, 47, 48,
@@ -61,9 +61,9 @@ namespace Moves {
             91, 92, 93, 94, 95, 96, 97, 98
     };
 
-    const bool SLIDE[7] = {false, false, false, true, true, true, false};
-    const short OFFSETS[7] = {0, 4, 8, 4, 4, 8, 8};
-    const short OFFSET[7][8] = {
+    constexpr bool SLIDE[7] = {false, false, false, true, true, true, false};
+    constexpr short OFFSETS[7] = {0, 4, 8, 4, 4, 8, 8};
+    constexpr short OFFSET[7][8] = {
             {0,   0,   0,   0,  0, 0,  0,  0},
             {8,   9,   11,  16, 0, 0,  0,  0},
             {-21, -19, -12, -8, 8, 12, 19, 21},

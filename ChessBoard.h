@@ -4,6 +4,7 @@
 
 #include <vector>
 #include <iostream>
+#include <cstdint>
 #include "Move.h"
 #include "Piece.h"
 #include "Util.h"
@@ -53,21 +54,21 @@ public:
     std::vector<short> enPassantHistory;
     std::vector<int> halfMoveClockHistory;
 
-    std::vector<unsigned long int> positionHistory;
+    std::vector<uint64_t> positionHistory;
     std::vector<int> irreversibleIndices; //indices of positionHistory from where irreversible moves were made
 
-    unsigned long int hashCode{};
+    uint64_t hashCode{};
     HashCodes hashCodes{};
 
     ChessBoard();
 
     void setStartingPosition();
 
-    void setPosition(std::string fen);
+    void setPosition(const std::string&fen);
 
     friend std::ostream &operator<<(std::ostream &os, const ChessBoard &board);
 
-    std::string fen();
+    std::string fen() const;
 
     void makeMove(const Move &move);
 

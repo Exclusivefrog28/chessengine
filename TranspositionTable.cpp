@@ -1,66 +1,83 @@
 #include "TranspositionTable.h"
 #include <cmath>
+#include <cstdio>
+
+#include "MoveGenerator.h"
 
 #define MATE_SCORE 65536
 
-TranspositionTable::Entry TranspositionTable::getEntry(unsigned long int key, int ply) {
-    int index = key % TT_SIZE;
-    Entry entry = entries[index];
+TranspositionTable::Entry TranspositionTable::getEntry(const uint64_t key, const int ply) {
+	const int index = key % TT_SIZE;
+	Entry entry = entries[index];
 
-    if (abs(entry.score) == MATE_SCORE) {
-        int sign = entry.score > 0 ? 1 : -1;
-        entry.score = sign * (MATE_SCORE - ply);
-    }
-    reads++;
+	if (abs(entry.score) == MATE_SCORE) {
+		int sign = entry.score > 0 ? 1 : -1;
+		entry.score = sign * (MATE_SCORE - ply);
+	}
+	reads++;
 
-    return entry;
+	return entry;
 }
 
-bool TranspositionTable::contains(unsigned long int key) {
-    int index = key % TT_SIZE;
-    bool exists = entries[index].nodeType != EMPTY;
-    bool sameKey = (entries[index].key == key);
-    if(exists && !sameKey) collisions++;
+bool TranspositionTable::contains(const uint64_t key) {
+	const int index = key % TT_SIZE;
+	const bool exists = entries[index].nodeType != EMPTY;
+	const bool sameKey = (entries[index].key == key);
+	if (exists && !sameKey) collisions++;
 
-    return exists && sameKey;
+	return exists && sameKey;
 }
 
-void TranspositionTable::setEntry(unsigned long int key, TranspositionTable::Entry entry, int ply) {
-    const int index = key % TT_SIZE;
-    bool mate = false;
+void TranspositionTable::setEntry(const ChessBoard&board, const Move bestMove, const int depth, int score, const NodeType nodeType, const int ply) {
+	const int index = board.hashCode % TT_SIZE;
+	bool mate = false;
 
-    if (abs(entry.score) >= MATE_SCORE - (entry.depth + ply)) {
-        int sign = entry.score > 0 ? 1 : -1;
-        entry.score = sign * MATE_SCORE;
-        mate = true;
-    }
+	if (abs(score) >= MATE_SCORE - (depth + ply)) {
+		const int sign = score > 0 ? 1 : -1;
+		score = sign * MATE_SCORE;
+		mate = true;
+	}
 
-    const NodeType savedType = entries[index].nodeType;
-    const NodeType newType = entry.nodeType;
+	const NodeType savedType = entries[index].nodeType;
 
-    //REPLACEMENT SCHEME
-    // 0. Always write EXACT mates (those are guaranteed to be correct)
-    // 1. Prefer EXACT nodes to bounds
-    // 2. Prefer deeper nodes to shallower
-    if (mate && savedType == EXACT) {
-        write(index, entry);
-        return;
-    }
-    if (savedType != EMPTY) {
-        if ((savedType != EXACT && newType != EXACT) || (savedType == EXACT && newType == EXACT)) {
-            if (entries[index].depth <= entry.depth) write(index, entry);
-        } else if (savedType != EXACT) write(index, entry);
-    } else write(index, entry);
+	const Entry entry = {board.hashCode, bestMove, depth, score, nodeType};
+
+	//REPLACEMENT SCHEME
+	// 0. Always write EXACT mates (those are guaranteed to be correct)
+	// 1. Prefer EXACT nodes to bounds
+	// 2. Prefer deeper nodes to shallower
+	if (mate && savedType == EXACT) {
+		write(index, entry);
+		return;
+	}
+	if (savedType != EMPTY) {
+		if ((savedType != EXACT && nodeType != EXACT) || (savedType == EXACT && nodeType == EXACT)) {
+			if (entries[index].depth <= depth) write(index, entry);
+		}
+		else if (savedType != EXACT) write(index, entry);
+	}
+	else write(index, entry);
 }
 
-void TranspositionTable::write(int index, TranspositionTable::Entry entry) {
-    entries[index] = entry;
-    writes++;
+void TranspositionTable::write(const int index, const Entry&entry) {
+	entries[index] = entry;
+	writes++;
 }
 
 void TranspositionTable::resetCounters() {
-    reads = 0;
-    writes = 0;
-    collisions = 0;
+	reads = 0;
+	writes = 0;
+	collisions = 0;
 }
 
+int TranspositionTable::occupancy() const {
+	int occupied = 0;
+	for (int i = 0; i < TT_SIZE; i++) {
+		if (entries[i].nodeType != EMPTY) occupied++;
+	}
+	return occupied;
+}
+
+void TranspositionTable::clear() {
+	entries = std::array<Entry, TT_SIZE>();
+}
