@@ -233,9 +233,7 @@ std::vector<ScoredMove> Search::scoreMoves(const std::vector<Move>&moves, const 
 	for (const Move&move: moves) {
 		int score = 0;
 
-		if (lastPV.size() - 1 <= ply && lastPV[ply] == move) score = 1 << 31;
-
-		else if (move == hashMove) score = 1 << 30;
+		if (move == hashMove) score = 1 << 30;
 
 		else if (move.promotionType != 0) {
 			score = mg_value[move.promotionType - 1] - mg_value[0];
@@ -333,6 +331,7 @@ std::vector<Move> Search::collectPV(const int depth, bool&gameOver) const {
 		Move move = entry.bestMove;
 		auto moves = MoveGenerator::pseudoLegalMoves(board);
 		if (moves.empty()) break;
+#ifdef DEBUG
 		bool legal = false;
 		for (const Move&m: moves) {
 			if (m == move) {
@@ -347,6 +346,7 @@ std::vector<Move> Search::collectPV(const int depth, bool&gameOver) const {
 					hashCode << std::endl;
 			break;
 		}
+#endif
 
 		pvPositions.insert(board.hashCode);
 		board.makeMove(move);
@@ -373,7 +373,6 @@ bool Search::getTransposition(const uint64_t hash, const int depth, const int pl
 						score = entry.score;
 						return true;
 					}
-					hashMove = entry.bestMove;
 					beta = std::min(beta, entry.score);
 					break;
 				case TranspositionTable::LOWERBOUND:
@@ -381,10 +380,11 @@ bool Search::getTransposition(const uint64_t hash, const int depth, const int pl
 						score = entry.score;
 						return true;
 					}
-					hashMove = entry.bestMove;
 					alpha = std::max(alpha, entry.score);
+				default: break;
 			}
 		}
+		hashMove = entry.bestMove;
 	}
 
 	return false;
