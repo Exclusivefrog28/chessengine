@@ -14,9 +14,6 @@ TranspositionTable Search::tt = TranspositionTable();
 Move Search::search(ChessBoard&board, const int timeAllowed) {
 	Search search = Search(board);
 
-	std::string fenbefore = board.fen();
-	uint64_t hashbefore = board.hashCode;
-
 	const auto timeOut = std::chrono::milliseconds(timeAllowed);
 
 	const auto start = std::chrono::steady_clock::now();
