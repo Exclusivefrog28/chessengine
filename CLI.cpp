@@ -126,18 +126,14 @@ namespace Interface {
 					}
 				}
 
-				std::cout << board.fen() << std::endl;
 				const Move bestMove = Search::search(board, timeOut);
-				std::cout << board.fen() << std::endl;
 
 				const std::string promotion = (bestMove.promotionType != EMPTY)
 					                              ? Util::pieceToString(bestMove.promotionType, BLACK)
 					                              : "";
 
-				std::cout << std::to_string(board.hashCode) << std::endl;
 				std::cout << "bestmove " << Util::positionToString(bestMove.start) <<
 						Util::positionToString(bestMove.end) << promotion << std::endl;
-
 
 				break;
 			}
