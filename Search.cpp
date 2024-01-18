@@ -368,14 +368,12 @@ bool Search::getTransposition(const uint64_t hash, const int depth, const int pl
 						score = entry.score;
 						return true;
 					}
-					if (abs(entry.score) + ply != MATE_SCORE) beta = std::min(beta, entry.score);
 					break;
 				case TranspositionTable::LOWERBOUND:
 					if (entry.score >= beta) {
 						score = entry.score;
 						return true;
 					}
-					if (abs(entry.score) + ply != MATE_SCORE) alpha = std::max(alpha, entry.score);
 				default: break;
 			}
 		}
