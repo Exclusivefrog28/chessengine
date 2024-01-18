@@ -52,7 +52,7 @@ private:
 
 	void storeKillerMove(Move move, int ply);
 
-	std::vector<Move> collectPV(int depth, bool&gameOver) const;
+	std::vector<Move> collectPV(int depth) const;
 };
 
 #endif

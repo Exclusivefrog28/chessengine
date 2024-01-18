@@ -37,9 +37,7 @@ Move Search::search(ChessBoard&board, const int timeAllowed) {
 			break;
 		}
 
-		bool gameOver = false;
-		search.lastPV = search.collectPV(i, gameOver);
-		if (gameOver) break;
+		if (abs(tt.getEntry(board.hashCode, 0).score) == MATE_SCORE) break;
 	}
 #ifdef wasm
 	printf("Depth: %d\n", i - 1);
@@ -59,8 +57,10 @@ Move Search::search(ChessBoard&board, const int timeAllowed) {
 	printf("\nTT occupancy: %d", tt.occupancy());
 	printf("\n**************************\n");
 #endif
+	search.lastPV = search.collectPV(i);
 
 	tt.resetCounters();
+
 	if (search.lastPV.empty()) {
 		std::cout << "problem" << std::endl;
 		return NULL_MOVE;
@@ -101,8 +101,6 @@ int Search::alphaBeta(const int depth, int alpha, int beta, const int ply) {
 	Move bestMove = NULL_MOVE;
 	int bestScore = INT32_MIN;
 
-	bool noStore = false;
-
 	for (int i = 0; i < moves.size(); i++) {
 		Move move = selectMove(moves, i);
 		board.makeMove(move);
@@ -114,21 +112,17 @@ int Search::alphaBeta(const int depth, int alpha, int beta, const int ply) {
 		hasLegalMoves = true;
 
 		bool draw = false;
-		bool threefold = false;
 		//50 move rule
 		if (board.halfMoveClock >= 100 &&
 		    !(board.squares[move.end].type == PAWN || (move.flag >= 1 && move.flag <= 5) || move.promotionType != EMPTY))
 			draw = true;
 		//threefold repetition
 		else {
-			int repetitions = 1;
 			for (int j = board.positionHistory.size() - 4;
 			     j >= 0 && (board.irreversibleIndices.empty() || board.irreversibleIndices.back() < j);
 			     j -= 2) {
-				if (board.positionHistory[j] == board.hashCode) repetitions++;
-				if (repetitions == 2) {
+				if (board.positionHistory[j] == board.hashCode) {
 					draw = true;
-					threefold = true;
 					break;
 				}
 			}
@@ -139,15 +133,14 @@ int Search::alphaBeta(const int depth, int alpha, int beta, const int ply) {
 
 		if (stop) return 0;
 
-
 		if (score >= beta) {
 			if (move.flag == 0 || move.flag >= 7) {
 				storeKillerMove(move, ply);
 				history[board.sideToMove][move.start][move.end] += depth * depth;
 			}
 
-			if (!threefold)
-				tt.setEntry(board, move, depth, score, TranspositionTable::LOWERBOUND, ply);
+			tt.setEntry(board, move, depth, score, TranspositionTable::LOWERBOUND, ply);
+
 			return score;
 		}
 		if (score > alpha) {
@@ -159,7 +152,6 @@ int Search::alphaBeta(const int depth, int alpha, int beta, const int ply) {
 		else if (score > bestScore) {
 			bestScore = score;
 			bestMove = move;
-			noStore = threefold;
 		}
 	}
 	if (!hasLegalMoves) {
@@ -167,7 +159,7 @@ int Search::alphaBeta(const int depth, int alpha, int beta, const int ply) {
 		return 0;
 	}
 
-	if (!noStore) tt.setEntry(board, bestMove, depth, bestScore, nodeType, ply);
+	tt.setEntry(board, bestMove, depth, bestScore, nodeType, ply);
 
 	return alpha;
 }
@@ -318,7 +310,7 @@ void Search::storeKillerMove(Move move, int ply) {
 Search::Search(ChessBoard&board) : board(board) {
 }
 
-std::vector<Move> Search::collectPV(const int depth, bool&gameOver) const {
+std::vector<Move> Search::collectPV(const int depth) const {
 	std::vector<Move> pv;
 	std::unordered_set<uint64_t> pvPositions;
 	pv.reserve(depth);
@@ -327,7 +319,6 @@ std::vector<Move> Search::collectPV(const int depth, bool&gameOver) const {
 	while (tt.contains(board.hashCode) && !pvPositions.contains(board.hashCode)) {
 		const TranspositionTable::Entry entry = tt.getEntry(board.hashCode, 0);
 		if (entry.nodeType != TranspositionTable::EXACT) break;
-		if (abs(entry.score) == MATE_SCORE) gameOver = true;
 		Move move = entry.bestMove;
 		auto moves = MoveGenerator::pseudoLegalMoves(board);
 		if (moves.empty()) break;
