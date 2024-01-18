@@ -30,12 +30,10 @@ bool TranspositionTable::contains(const uint64_t key) {
 
 void TranspositionTable::setEntry(const ChessBoard&board, const Move bestMove, const int depth, int score, const NodeType nodeType, const int ply) {
 	const int index = board.hashCode % TT_SIZE;
-	bool mate = false;
 
 	if (abs(score) >= MATE_SCORE - (depth + ply)) {
 		const int sign = score > 0 ? 1 : -1;
 		score = sign * MATE_SCORE;
-		mate = true;
 	}
 
 	const NodeType savedType = entries[index].nodeType;
@@ -43,13 +41,9 @@ void TranspositionTable::setEntry(const ChessBoard&board, const Move bestMove, c
 	const Entry entry = {board.hashCode, bestMove, depth, score, nodeType};
 
 	//REPLACEMENT SCHEME
-	// 0. Always write EXACT mates (those are guaranteed to be correct)
 	// 1. Prefer EXACT nodes to bounds
 	// 2. Prefer deeper nodes to shallower
-	if (mate && savedType == EXACT) {
-		write(index, entry);
-		return;
-	}
+
 	if (savedType != EMPTY) {
 		if ((savedType != EXACT && nodeType != EXACT) || (savedType == EXACT && nodeType == EXACT)) {
 			if (entries[index].depth <= depth) write(index, entry);

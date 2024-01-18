@@ -113,7 +113,7 @@ namespace Interface {
 			case go: {
 				int timeOut = 3000;
 
-				if (instr.args.size() > 0) {
+				if (!instr.args.empty()) {
 					const std::string arg = instr.args[0];
 					if (arg == "movetime") {
 						timeOut = std::stoi(instr.args[1]);
@@ -128,12 +128,7 @@ namespace Interface {
 
 				const Move bestMove = Search::search(board, timeOut);
 
-				const std::string promotion = (bestMove.promotionType != EMPTY)
-					                              ? Util::pieceToString(bestMove.promotionType, BLACK)
-					                              : "";
-
-				std::cout << "bestmove " << Util::positionToString(bestMove.start) <<
-						Util::positionToString(bestMove.end) << promotion << std::endl;
+				std::cout << "bestmove " << bestMove << std::endl;
 
 				break;
 			}

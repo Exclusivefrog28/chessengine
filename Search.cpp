@@ -14,6 +14,9 @@ TranspositionTable Search::tt = TranspositionTable();
 Move Search::search(ChessBoard&board, const int timeAllowed) {
 	Search search = Search(board);
 
+	std::string fenbefore = board.fen();
+	uint64_t hashbefore = board.hashCode;
+
 	const auto timeOut = std::chrono::milliseconds(timeAllowed);
 
 	const auto start = std::chrono::steady_clock::now();
@@ -62,7 +65,8 @@ Move Search::search(ChessBoard&board, const int timeAllowed) {
 	tt.resetCounters();
 
 	if (search.lastPV.empty()) {
-		std::cout << "problem" << std::endl;
+		auto entry = tt.getEntry(board.hashCode, 0);
+		std::cout << "problem HASH: " << board.hashCode << " TT: key- " << entry.key << ", move- " << entry.bestMove << ", type- " << entry.nodeType << ", depth- " << entry.depth << ", score- " << entry.score << std::endl;
 		return NULL_MOVE;
 	}
 	return search.lastPV[0];
@@ -364,14 +368,14 @@ bool Search::getTransposition(const uint64_t hash, const int depth, const int pl
 						score = entry.score;
 						return true;
 					}
-					beta = std::min(beta, entry.score);
+					if (abs(entry.score) + ply != MATE_SCORE) beta = std::min(beta, entry.score);
 					break;
 				case TranspositionTable::LOWERBOUND:
 					if (entry.score >= beta) {
 						score = entry.score;
 						return true;
 					}
-					alpha = std::max(alpha, entry.score);
+					if (abs(entry.score) + ply != MATE_SCORE) alpha = std::max(alpha, entry.score);
 				default: break;
 			}
 		}

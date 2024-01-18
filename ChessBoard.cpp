@@ -8,8 +8,8 @@ void ChessBoard::setStartingPosition() {
 std::ostream& operator<<(std::ostream&os, const ChessBoard&board) {
 	for (int i = 0; i < 8; ++i) {
 		for (int j = 0; j < 8; ++j) {
-			Type type = board.squares[i * 8 + j].type;
-			Color color = board.squares[i * 8 + j].color;
+			const Type type = board.squares[i * 8 + j].type;
+			const Color color = board.squares[i * 8 + j].color;
 			os << Util::pieceToString(type, color) << " ";
 		}
 		os << std::endl;

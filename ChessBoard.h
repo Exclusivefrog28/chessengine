@@ -3,11 +3,9 @@
 
 
 #include <vector>
-#include <iostream>
 #include <cstdint>
 #include "Move.h"
 #include "Piece.h"
-#include "Util.h"
 #include "HashCodes.h"
 
 using namespace Pieces;
