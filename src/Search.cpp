@@ -117,21 +117,15 @@ int Search::alphaBeta(const int depth, int alpha, int beta, const int ply) {
 		if (board.halfMoveClock >= 100 &&
 		    !(board.squares[move.end].type == PAWN || (move.flag >= 1 && move.flag <= 5) || move.promotionType != EMPTY))
 			draw = true;
-		//threefold repetition
+		//repetition
 		else {
-			for (int j = board.positionHistory.size() - 4;
-			     j >= 0 && (board.irreversibleIndices.empty() || board.irreversibleIndices.back() < j);
-			     j -= 2) {
-				if (board.positionHistory[j] == board.hashCode) {
-					draw = true;
-					break;
-				}
-			}
+			draw = board.hasRepetitions();
 		}
 
 		const int score = (draw) ? 0 : -alphaBeta(depth - 1, -beta, -alpha, ply + 1);
 		board.unMakeMove();
 
+		if (draw) continue;
 		if (stop) return 0;
 
 		if (score >= beta) {

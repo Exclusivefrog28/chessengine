@@ -32,7 +32,7 @@ void ChessBoard::makeMove(const Move&move) {
 		enPassantSquare = -1;
 	}
 
-	if (squares[move.start].type == PAWN || (move.flag >= 1 && move.flag <= 5)) {
+	if (squares[move.start].type == PAWN || (move.flag > 0)) {
 		halfMoveClock = 0;
 		irreversibleIndices.push_back(positionHistory.size() - 1);
 	}
@@ -60,7 +60,7 @@ void ChessBoard::makeMove(const Move&move) {
 		}
 	}
 
-	sideToMove = Pieces::invertColor(sideToMove);
+	sideToMove = invertColor(sideToMove);
 	hashCode ^= hashCodes.blackToMoveCode;
 
 	Move m = move;
@@ -281,6 +281,18 @@ bool ChessBoard::updateCastlingRights(const Move&move) {
 	return changed;
 }
 
+
+bool ChessBoard::hasRepetitions() const {
+	for (int j = positionHistory.size() - 4;
+	     j >= 0 && (irreversibleIndices.empty() || irreversibleIndices.back() < j);
+	     j -= 2) {
+		if (positionHistory[j] == hashCode) {
+			return true;
+		}
+	}
+	return false;
+}
+
 std::string ChessBoard::fen() const {
 	std::string fen;
 	for (int i = 0; i < 8; ++i) {
@@ -399,7 +411,7 @@ void ChessBoard::setPosition(const std::string&fen) {
 			if (fen[index] == ' ') break;
 		}
 		hashCode ^= hashCodes.castlingRightCodes[castlingRights.blackKingSide * 8 + castlingRights.blackQueenSide * 4 +
-												 castlingRights.whiteKingSide * 2 + castlingRights.whiteQueenSide];
+		                                         castlingRights.whiteKingSide * 2 + castlingRights.whiteQueenSide];
 	}
 	else index++;
 	index++;

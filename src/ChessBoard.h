@@ -72,6 +72,9 @@ public:
 
     void unMakeMove();
 
+    bool hasRepetitions() const;
+
+
 private:
     void movePiece(short start, short end);
 

@@ -1,4 +1,1 @@
-cmake-build-webassembly/
-cmake-build-release/
-cmake-build-debug/
-cmake-build-webassembly-debug/
+cmake-build-*/*
