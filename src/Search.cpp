@@ -112,20 +112,16 @@ int Search::alphaBeta(const int depth, int alpha, int beta, const int ply) {
 
 		hasLegalMoves = true;
 
-		bool draw = false;
 		//50 move rule
-		if (board.halfMoveClock >= 100 &&
-		    !(board.squares[move.end].type == PAWN || (move.flag >= 1 && move.flag <= 5) || move.promotionType != EMPTY))
-			draw = true;
-		//repetition
-		else {
-			draw = board.hasRepetitions();
-		}
+		bool draw = board.halfMoveClock >= 100 &&
+			!(board.squares[move.end].type == PAWN || move.flag >= 1 || move.promotionType != EMPTY);
 
-		const int score = (draw) ? 0 : -alphaBeta(depth - 1, -beta, -alpha, ply + 1);
+		//repetition
+		if (!draw) draw = board.isRepetition();
+
+		const int score = draw ? 0 : -alphaBeta(depth - 1, -beta, -alpha, ply + 1);
 		board.unMakeMove();
 
-		if (draw) continue;
 		if (stop) return 0;
 
 		if (score >= beta) {

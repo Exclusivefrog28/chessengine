@@ -63,20 +63,24 @@ void ChessBoard::makeMove(const Move&move) {
 	sideToMove = invertColor(sideToMove);
 	hashCode ^= hashCodes.blackToMoveCode;
 
-	Move m = move;
+	const Move m = move;
 	moveHistory.push_back(m);
 
 
-	if (updateCastlingRights(move)) {
-		CastlingRights prevCastlingRights = castlingRightHistory.back();
+	updateCastlingRights(move);
 
-		hashCode ^= hashCodes.castlingRightCodes[prevCastlingRights.blackKingSide * 8 +
-		                                         prevCastlingRights.blackQueenSide * 4 +
-		                                         prevCastlingRights.whiteKingSide * 2 +
-		                                         prevCastlingRights.whiteQueenSide];
-		hashCode ^= hashCodes.castlingRightCodes[castlingRights.blackKingSide * 8 + castlingRights.blackQueenSide * 4 +
-		                                         castlingRights.whiteKingSide * 2 + castlingRights.whiteQueenSide];
+	const auto [blackKingSide, blackQueenSide, whiteKingSide, whiteQueenSide] = castlingRightHistory.back();
 
+	const uint64_t previousHash = hashCodes.castlingRightCodes[blackKingSide * 8 +
+	                                                           blackQueenSide * 4 +
+	                                                           whiteKingSide * 2 +
+	                                                           whiteQueenSide];
+
+	const uint64_t newHash = hashCodes.castlingRightCodes[castlingRights.blackKingSide * 8 + castlingRights.blackQueenSide * 4 +
+	                                                      castlingRights.whiteKingSide * 2 + castlingRights.whiteQueenSide];
+	if (previousHash != newHash) {
+		hashCode ^= previousHash;
+		hashCode ^= newHash;
 		if (irreversibleIndices.empty() || irreversibleIndices.back() != positionHistory.size() - 1)
 			irreversibleIndices.push_back(positionHistory.size() - 1);
 	}
@@ -91,7 +95,7 @@ void ChessBoard::unMakeMove() {
 
 	Move lastMove = moveHistory.back();
 
-	CastlingRights prevCastlingRights = castlingRightHistory.back();
+	const CastlingRights prevCastlingRights = castlingRightHistory.back();
 
 	if (castlingRights != prevCastlingRights) {
 		hashCode ^= hashCodes.castlingRightCodes[castlingRights.blackKingSide * 8 + castlingRights.blackQueenSide * 4 +
@@ -120,16 +124,16 @@ void ChessBoard::unMakeMove() {
 		removePiece(lastMove.end);
 		setPiece(lastMove.start, {PAWN, lastMove.player});
 		if (lastMove.flag > 0)
-			setPiece(lastMove.end, {static_cast<Type>(lastMove.flag), Pieces::invertColor(lastMove.player)});
+			setPiece(lastMove.end, {static_cast<Type>(lastMove.flag), invertColor(lastMove.player)});
 	}
 	else {
 		movePiece(lastMove.end, lastMove.start);
 
 		if (lastMove.flag > 0 && lastMove.flag < 6) {
-			setPiece(lastMove.end, {static_cast<Type>(lastMove.flag), Pieces::invertColor(lastMove.player)});
+			setPiece(lastMove.end, {static_cast<Type>(lastMove.flag), invertColor(lastMove.player)});
 		}
 		else if (lastMove.flag == ENPASSANT) {
-			setPiece(enPassantSquare, {PAWN, Pieces::invertColor(lastMove.player)});
+			setPiece(enPassantSquare, {PAWN, invertColor(lastMove.player)});
 		}
 		else if (lastMove.flag == CASTLEKINGSIDE) {
 			movePiece(lastMove.end - 1, lastMove.end + 1);
@@ -139,17 +143,17 @@ void ChessBoard::unMakeMove() {
 		}
 	}
 
-	sideToMove = Pieces::invertColor(sideToMove);
+	sideToMove = invertColor(sideToMove);
 	hashCode ^= hashCodes.blackToMoveCode;
 }
 
 void ChessBoard::movePiece(short start, short end) {
 	if (squares[end].type != EMPTY) removePiece(end);
 
-	Square piece = squares[start];
+	const Square piece = squares[start];
 
 	squares[end] = squares[start];
-	squares[start] = {Pieces::EMPTY, WHITE};
+	squares[start] = {EMPTY, WHITE};
 
 	switch (piece.type) {
 		case PAWN: {
@@ -205,7 +209,7 @@ void ChessBoard::setPiece(short position, const Square&piece) {
 }
 
 void ChessBoard::removePiece(short position) {
-	Square piece = squares[position];
+	const Square piece = squares[position];
 
 	if (piece.type == PAWN) {
 		std::vector<short>* pawnList = (piece.color == WHITE) ? &whitePawns : &blackPawns;
@@ -230,59 +234,47 @@ void ChessBoard::removePiece(short position) {
 	squares[position] = {EMPTY, WHITE};
 }
 
-bool ChessBoard::updateCastlingRights(const Move&move) {
-	bool changed = false;
-
+void ChessBoard::updateCastlingRights(const Move&move) {
 	if (move.player == WHITE) {
 		if (castlingRights.whiteKingSide) {
 			if (move.start == 60 || move.start == 63) {
 				castlingRights.whiteKingSide = false;
-				changed = true;
 			}
 		}
 		if (castlingRights.whiteQueenSide) {
 			if (move.start == 60 || move.start == 56) {
 				castlingRights.whiteQueenSide = false;
-				changed = true;
 			}
 		}
 		if (castlingRights.blackKingSide && move.end == 7) {
 			castlingRights.blackKingSide = false;
-			changed = true;
 		}
 		else if (castlingRights.blackQueenSide && move.end == 0) {
 			castlingRights.blackQueenSide = false;
-			changed = true;
 		}
 	}
 	else {
 		if (castlingRights.blackKingSide) {
 			if (move.start == 4 || move.start == 7) {
 				castlingRights.blackKingSide = false;
-				changed = true;
 			}
 		}
 		if (castlingRights.blackQueenSide) {
 			if (move.start == 4 || move.start == 0) {
 				castlingRights.blackQueenSide = false;
-				changed = true;
 			}
 		}
 		if (castlingRights.whiteKingSide && move.end == 63) {
 			castlingRights.whiteKingSide = false;
-			changed = true;
 		}
 		else if (castlingRights.whiteQueenSide && move.end == 56) {
 			castlingRights.whiteQueenSide = false;
-			changed = true;
 		}
 	}
-
-	return changed;
 }
 
 
-bool ChessBoard::hasRepetitions() const {
+bool ChessBoard::isRepetition() const {
 	for (int j = positionHistory.size() - 4;
 	     j >= 0 && (irreversibleIndices.empty() || irreversibleIndices.back() < j);
 	     j -= 2) {
@@ -343,6 +335,7 @@ std::string ChessBoard::fen() const {
 }
 
 void ChessBoard::setPosition(const std::string&fen) {
+	positionHistory.push_back(hashCode);
 	hashCode = hashCodes.initialCode;
 	short position = 0;
 	int index = 0;
@@ -353,8 +346,6 @@ void ChessBoard::setPosition(const std::string&fen) {
 	blackPawns = std::vector<short>();
 	whiteKing = -1;
 	blackKing = -1;
-	moveHistory = std::vector<Move>();
-	castlingRightHistory = std::vector<CastlingRights>();
 	squares = std::array<Square, 64>();
 	enPassantSquare = -1;
 

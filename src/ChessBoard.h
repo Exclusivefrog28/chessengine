@@ -72,7 +72,7 @@ public:
 
     void unMakeMove();
 
-    bool hasRepetitions() const;
+    bool isRepetition() const;
 
 
 private:
@@ -82,7 +82,7 @@ private:
 
     void removePiece(short position);
 
-    bool updateCastlingRights(const Move &move);
+    void updateCastlingRights(const Move&move);
 
 };
 

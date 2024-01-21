@@ -89,6 +89,7 @@ namespace Interface {
 				break;
 			case ucinewgame:
 				Search::tt.clear();
+				board = ChessBoard();
 				break;
 			case position: {
 				int startIndex = 1;
@@ -129,6 +130,8 @@ namespace Interface {
 				const Move bestMove = Search::search(board, timeOut);
 
 				std::cout << "bestmove " << bestMove << std::endl;
+
+				board.makeMove(bestMove);
 
 				break;
 			}
