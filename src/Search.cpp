@@ -19,7 +19,7 @@ Move Search::search(ChessBoard&board, const int timeAllowed) {
 	const auto start = std::chrono::steady_clock::now();
 
 	int i = 1;
-	for (;; ++i) {
+	for (; i < 100; ++i) {
 		std::thread thread(&Search::threadedSearch, &search, i);
 
 		std::unique_lock<std::mutex> lk(search.cv_m);
@@ -37,7 +37,7 @@ Move Search::search(ChessBoard&board, const int timeAllowed) {
 			break;
 		}
 
-		if (abs(tt.getEntry(board.hashCode, 0).score) == MATE_SCORE) break;
+		//if (abs(tt.getEntry(board.hashCode, 0).score) == MATE_SCORE) break;
 	}
 #ifdef wasm
 	printf("Depth: %d\n", i - 1);
@@ -63,7 +63,8 @@ Move Search::search(ChessBoard&board, const int timeAllowed) {
 
 	if (search.lastPV.empty()) {
 		auto entry = tt.getEntry(board.hashCode, 0);
-		std::cout << "problem HASH: " << board.hashCode << " TT: key- " << entry.key << ", move- " << entry.bestMove << ", type- " << entry.nodeType << ", depth- " << entry.depth << ", score- " << entry.score << std::endl;
+		std::cout << "problem HASH: " << board.hashCode << " TT: key- " << entry.key << ", move- " << entry.bestMove << ", type- " << entry.nodeType <<
+				", depth- " << entry.depth << ", score- " << entry.score << std::endl;
 		return NULL_MOVE;
 	}
 	return search.lastPV[0];
@@ -114,7 +115,7 @@ int Search::alphaBeta(const int depth, int alpha, int beta, const int ply) {
 
 		//50 move rule
 		bool draw = board.halfMoveClock >= 100 &&
-			!(board.squares[move.end].type == PAWN || move.flag >= 1 || move.promotionType != EMPTY);
+		            !(board.squares[move.end].type == PAWN || move.flag >= 1 || move.promotionType != EMPTY);
 
 		//repetition
 		if (!draw) draw = board.isRepetition();
@@ -168,13 +169,12 @@ int Search::quiesce(int alpha, int beta, const int ply, const int depth) {
 
 	Move hashMove = NULL_MOVE;
 	int positionScore = 0;
-
 	if (getTransposition(board.hashCode, depth, ply, positionScore, alpha, beta, hashMove)) return positionScore;
 
 	std::vector<ScoredMove> moves = scoreTacticalMoves(MoveGenerator::tacticalMoves(board), hashMove);
 
 	TranspositionTable::NodeType nodeType = TranspositionTable::UPPERBOUND;
-	Move bestMove = NULL_MOVE;
+	Move bestMove = {-1, -1, EMPTY, QUIET, WHITE};
 	int bestScore = INT32_MIN;
 
 	for (int i = 0; i < moves.size(); i++) {
@@ -186,7 +186,9 @@ int Search::quiesce(int alpha, int beta, const int ply, const int depth) {
 			board.unMakeMove();
 			continue;
 		}
-		const int score = -quiesce(-beta, -alpha, ply + 1, depth - 1);
+		const bool draw = board.isRepetition();
+
+		const int score = draw ? 0 : -quiesce(-beta, -alpha, ply + 1, depth - 1);
 		board.unMakeMove();
 
 		if (stop) return 0;
@@ -304,16 +306,22 @@ Search::Search(ChessBoard&board) : board(board) {
 std::vector<Move> Search::collectPV(const int depth) const {
 	std::vector<Move> pv;
 	std::unordered_set<uint64_t> pvPositions;
+	std::vector<int> scores;
 	pv.reserve(depth);
 
 	int pvDepth = 0;
-	while (tt.contains(board.hashCode) && !pvPositions.contains(board.hashCode)) {
+	while (tt.contains(board.hashCode)) {
 		const TranspositionTable::Entry entry = tt.getEntry(board.hashCode, 0);
 		if (entry.nodeType != TranspositionTable::EXACT) break;
 		Move move = entry.bestMove;
+
+		if (pvPositions.contains(board.hashCode)) {
+			std::cout << "Cycle in PV!" << std::endl;
+			break;
+		}
+#ifdef DEBUG
 		auto moves = MoveGenerator::pseudoLegalMoves(board);
 		if (moves.empty()) break;
-#ifdef DEBUG
 		bool legal = false;
 		for (const Move&m: moves) {
 			if (m == move) {
@@ -333,8 +341,15 @@ std::vector<Move> Search::collectPV(const int depth) const {
 		pvPositions.insert(board.hashCode);
 		board.makeMove(move);
 		pv.push_back(move);
+		scores.push_back(entry.score);
 		pvDepth++;
 	}
+	std::cout << "info PV: ";
+	for (int i = 0; i < pv.size(); ++i) {
+		std::cout << "[" << pv[i] << " - " << scores[i] << "] ";
+	}
+	std::cout << std::endl;
+
 	for (; pvDepth > 0; --pvDepth) {
 		board.unMakeMove();
 	}

@@ -20,7 +20,7 @@ namespace Pieces {
 
     struct Piece {
         Type type;
-        short position;
+        int_fast8_t position;
     };
 
     struct Square {

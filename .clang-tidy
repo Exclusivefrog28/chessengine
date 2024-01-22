@@ -1,1 +1,1 @@
-Checks: '-cppcoreguidelines-narrowing-conversions'
+Checks: '-cppcoreguidelines-narrowing-conversions -misc-no-recursion'

@@ -6,12 +6,12 @@
 
 class MoveGenerator {
 public:
-    static std::vector<Moves::Move> pseudoLegalMoves(const ChessBoard& board);
-    static std::vector<Moves::Move> tacticalMoves(const ChessBoard& board);
-    static bool isSquareAttacked(const ChessBoard& board, short square, Color color);
+    static std::vector<Move> pseudoLegalMoves(const ChessBoard& board);
+    static std::vector<Move> tacticalMoves(const ChessBoard& board);
+    static bool isSquareAttacked(const ChessBoard& board, int_fast8_t square, Color color);
     static bool inCheck(const ChessBoard& board, Color color);
     static unsigned long long perft(int depth,  ChessBoard& board);
-    static bool isLegalMove(ChessBoard &board, Moves::Move move);
+    static bool isLegalMove(ChessBoard &board, Move move);
 };
 
 #endif //CHESSENGINE_MOVEGENERATOR_H

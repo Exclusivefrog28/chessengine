@@ -13,6 +13,6 @@ public:
 
 
 private:
-    static short flipPosition(short pos);
+    static int_fast8_t flipPosition(int_fast8_t pos);
 };
 #endif //CHESSENGINE_EVALUATOR_H

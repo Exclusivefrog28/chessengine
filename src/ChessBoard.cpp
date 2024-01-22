@@ -119,7 +119,6 @@ void ChessBoard::unMakeMove() {
 
 	if (lastMove.player == BLACK) fullMoveClock--;
 
-
 	if (lastMove.promotionType != EMPTY) {
 		removePiece(lastMove.end);
 		setPiece(lastMove.start, {PAWN, lastMove.player});
@@ -147,7 +146,7 @@ void ChessBoard::unMakeMove() {
 	hashCode ^= hashCodes.blackToMoveCode;
 }
 
-void ChessBoard::movePiece(short start, short end) {
+void ChessBoard::movePiece(int_fast8_t start, int_fast8_t end) {
 	if (squares[end].type != EMPTY) removePiece(end);
 
 	const Square piece = squares[start];
@@ -157,8 +156,8 @@ void ChessBoard::movePiece(short start, short end) {
 
 	switch (piece.type) {
 		case PAWN: {
-			std::vector<short>* pawnList = (piece.color == WHITE) ? &whitePawns : &blackPawns;
-			for (short&i: *pawnList) {
+			std::vector<int_fast8_t>* pawnList = (piece.color == WHITE) ? &whitePawns : &blackPawns;
+			for (int_fast8_t&i: *pawnList) {
 				if (i == start) {
 					i = end;
 					break;
@@ -167,7 +166,7 @@ void ChessBoard::movePiece(short start, short end) {
 		}
 		break;
 		case KING: {
-			short* kingPosition = (piece.color == WHITE) ? &whiteKing : &blackKing;
+			int_fast8_t* kingPosition = (piece.color == WHITE) ? &whiteKing : &blackKing;
 			*kingPosition = end;
 		}
 		default: {
@@ -186,15 +185,15 @@ void ChessBoard::movePiece(short start, short end) {
 	hashCode ^= hashCodes.pieceCode(piece.type, piece.color, end);
 }
 
-void ChessBoard::setPiece(short position, const Square&piece) {
+void ChessBoard::setPiece(int_fast8_t position, const Square&piece) {
 	switch (piece.type) {
 		case PAWN: {
-			std::vector<short>* pawnList = (piece.color == WHITE) ? &whitePawns : &blackPawns;
+			std::vector<int_fast8_t>* pawnList = (piece.color == WHITE) ? &whitePawns : &blackPawns;
 			pawnList->push_back(position);
 		}
 		break;
 		case KING: {
-			short* kingPosition = (piece.color == WHITE) ? &whiteKing : &blackKing;
+			int_fast8_t* kingPosition = (piece.color == WHITE) ? &whiteKing : &blackKing;
 			*kingPosition = position;
 		}
 		default: {
@@ -208,11 +207,11 @@ void ChessBoard::setPiece(short position, const Square&piece) {
 	squares[position] = piece;
 }
 
-void ChessBoard::removePiece(short position) {
+void ChessBoard::removePiece(int_fast8_t position) {
 	const Square piece = squares[position];
 
 	if (piece.type == PAWN) {
-		std::vector<short>* pawnList = (piece.color == WHITE) ? &whitePawns : &blackPawns;
+		std::vector<int_fast8_t>* pawnList = (piece.color == WHITE) ? &whitePawns : &blackPawns;
 		for (int i = 0; pawnList->size() > i; i++) {
 			if ((*pawnList)[i] == position) {
 				pawnList->erase(pawnList->begin() + i);
@@ -321,7 +320,7 @@ std::string ChessBoard::fen() const {
 	fen += fenCastlingRights;
 	fen += " ";
 
-	short fenPassant = enPassantSquare;
+	int_fast8_t fenPassant = enPassantSquare;
 	if (fenPassant < 31) fenPassant -= 8;
 	else fenPassant += 8;
 
@@ -335,15 +334,15 @@ std::string ChessBoard::fen() const {
 }
 
 void ChessBoard::setPosition(const std::string&fen) {
-	positionHistory.push_back(hashCode);
+	if (!positionHistory.empty()) positionHistory.push_back(hashCode);
 	hashCode = hashCodes.initialCode;
-	short position = 0;
+	int_fast8_t position = 0;
 	int index = 0;
 
 	whitePieces = std::vector<Piece>();
 	blackPieces = std::vector<Piece>();
-	whitePawns = std::vector<short>();
-	blackPawns = std::vector<short>();
+	whitePawns = std::vector<int_fast8_t>();
+	blackPawns = std::vector<int_fast8_t>();
 	whiteKing = -1;
 	blackKing = -1;
 	squares = std::array<Square, 64>();
@@ -408,7 +407,7 @@ void ChessBoard::setPosition(const std::string&fen) {
 	index++;
 
 	if (fen[index] != '-') {
-		short fenPassant = Util::stringToPosition(fen.substr(index, 2));
+		int_fast8_t fenPassant = Util::stringToPosition(fen.substr(index, 2));
 		if (fenPassant < 32) fenPassant += 8;
 		else fenPassant -= 8;
 		enPassantSquare = fenPassant;
@@ -427,4 +426,6 @@ void ChessBoard::setPosition(const std::string&fen) {
 	fullMoveClock = std::stoi(fen.substr(index, fullMoveLength));
 }
 
-ChessBoard::ChessBoard() = default;
+ChessBoard::ChessBoard() {
+	hashCodes.initialize();
+}

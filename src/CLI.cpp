@@ -9,7 +9,7 @@
 
 namespace Interface {
 	void CLI::start() {
-		board.hashCodes.initialize();
+		board = ChessBoard();
 		Instruction currentInstruction;
 		while (currentInstruction.command != quit) {
 			std::string input;
@@ -120,9 +120,13 @@ namespace Interface {
 						timeOut = std::stoi(instr.args[1]);
 					}
 					else if (arg == "perft") {
+						const uint64_t hashBefore = board.hashCode;
 						const int depth = std::stoi(instr.args[1]);
 						const unsigned long long nodes = MoveGenerator::perft(depth, board);
 						std::cout << nodes << std::endl;
+						if (board.hashCode != hashBefore) {
+							std::cout << "Hash mismatch" << std::endl;
+						}
 						break;
 					}
 				}

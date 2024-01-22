@@ -32,7 +32,7 @@ public:
         }
     }
 
-    uint64_t pieceCode(const Pieces::Type type, const Pieces::Color color, const short position) const {
+    int64_t pieceCode(const Pieces::Type type, const Pieces::Color color, const int_fast8_t position) const {
         return pieceCodes[((type - 1) * 64) + (color * 6*64) + position];
     }
 };

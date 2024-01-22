@@ -34,22 +34,22 @@ public:
     std::vector<Piece> whitePieces;
     std::vector<Piece> blackPieces;
 
-    std::vector<short> whitePawns;
-    std::vector<short> blackPawns;
+    std::vector<int_fast8_t> whitePawns;
+    std::vector<int_fast8_t> blackPawns;
 
-    short whiteKing{};
-    short blackKing{};
+    int_fast8_t whiteKing{};
+    int_fast8_t blackKing{};
 
     Color sideToMove = WHITE;
     CastlingRights castlingRights{};
-    short enPassantSquare = -1;
+    int_fast8_t enPassantSquare = -1;
 
     int halfMoveClock = 0;
     int fullMoveClock = 1;
 
     std::vector<Move> moveHistory;
     std::vector<CastlingRights> castlingRightHistory;
-    std::vector<short> enPassantHistory;
+    std::vector<int_fast8_t> enPassantHistory;
     std::vector<int> halfMoveClockHistory;
 
     std::vector<uint64_t> positionHistory;
@@ -76,11 +76,11 @@ public:
 
 
 private:
-    void movePiece(short start, short end);
+    void movePiece(int_fast8_t start, int_fast8_t end);
 
-    void setPiece(short position,const Square &piece);
+    void setPiece(int_fast8_t position,const Square &piece);
 
-    void removePiece(short position);
+    void removePiece(int_fast8_t position);
 
     void updateCastlingRights(const Move&move);
 

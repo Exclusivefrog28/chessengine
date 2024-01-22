@@ -7,6 +7,7 @@
 #include "Evaluator.h"
 #include "Search.h"
 #include <cstring>
+#include <string>
 
 #include "CLI.h"
 
@@ -25,7 +26,7 @@ void init() {
 EMSCRIPTEN_KEEPALIVE
 char* move(const int start, const int end, int flag, int promotionType, int player) {
 	board.makeMove({
-		static_cast<short>(start), static_cast<short>(end), static_cast<Pieces::Type>(promotionType),
+		static_cast<int_fast8_t>(start), static_cast<int_fast8_t>(end), static_cast<Pieces::Type>(promotionType),
 		static_cast<MoveFlag>(flag), static_cast<Pieces::Color>(player)
 	});
 
@@ -121,7 +122,7 @@ char* getMoves() {
 EMSCRIPTEN_KEEPALIVE
 char* getAttacks() {
 	std::string attackedSquares;
-	for (short i = 0; i < 64; ++i) {
+	for (int_fast8_t i = 0; i < 64; ++i) {
 		if (MoveGenerator::isSquareAttacked(board, i, board.sideToMove)) {
 			attackedSquares += Util::positionToString(i);
 			attackedSquares += " ";
