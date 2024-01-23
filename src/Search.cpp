@@ -20,6 +20,8 @@ Move Search::search(ChessBoard&board, const int timeAllowed) {
 
 	int i = 1;
 	for (; i < 100; ++i) {
+		std::cout << "info depth " << i << std::endl;
+
 		std::thread thread(&Search::threadedSearch, &search, i);
 
 		std::unique_lock<std::mutex> lk(search.cv_m);
@@ -36,7 +38,10 @@ Move Search::search(ChessBoard&board, const int timeAllowed) {
 			thread.join();
 			break;
 		}
-
+		search.lastPV = search.collectPV(i);
+		if (search.lastPV.size() > i) {
+			i = search.lastPV.size();
+		}
 		//if (abs(tt.getEntry(board.hashCode, 0).score) == MATE_SCORE) break;
 	}
 #ifdef wasm
@@ -57,7 +62,6 @@ Move Search::search(ChessBoard&board, const int timeAllowed) {
 	printf("\nTT occupancy: %d", tt.occupancy());
 	printf("\n**************************\n");
 #endif
-	search.lastPV = search.collectPV(i);
 
 	tt.resetCounters();
 
@@ -131,7 +135,7 @@ int Search::alphaBeta(const int depth, int alpha, int beta, const int ply) {
 				history[board.sideToMove][move.start][move.end] += depth * depth;
 			}
 
-			tt.setEntry(board, move, depth, score, TranspositionTable::LOWERBOUND, ply);
+			tt.setEntry(board, move, depth, beta, TranspositionTable::LOWERBOUND, ply);
 
 			return score;
 		}
@@ -151,7 +155,7 @@ int Search::alphaBeta(const int depth, int alpha, int beta, const int ply) {
 		return 0;
 	}
 
-	tt.setEntry(board, bestMove, depth, bestScore, nodeType, ply);
+	tt.setEntry(board, bestMove, depth, alpha, nodeType, ply);
 
 	return alpha;
 }
@@ -194,7 +198,7 @@ int Search::quiesce(int alpha, int beta, const int ply, const int depth) {
 		if (stop) return 0;
 
 		if (score >= beta) {
-			tt.setEntry(board, move, depth, score, TranspositionTable::LOWERBOUND, ply);
+			tt.setEntry(board, move, depth, beta, TranspositionTable::LOWERBOUND, ply);
 			return score;
 		}
 		if (score > alpha) {
@@ -208,7 +212,7 @@ int Search::quiesce(int alpha, int beta, const int ply, const int depth) {
 			bestMove = move;
 		}
 	}
-	tt.setEntry(board, bestMove, depth, bestScore, nodeType, ply);
+	tt.setEntry(board, bestMove, depth, alpha, nodeType, ply);
 
 	return alpha;
 }
@@ -317,6 +321,10 @@ std::vector<Move> Search::collectPV(const int depth) const {
 
 		if (pvPositions.contains(board.hashCode)) {
 			std::cout << "Cycle in PV!" << std::endl;
+			board.makeMove(move);
+			pv.push_back(move);
+			scores.push_back(entry.score);
+			pvDepth++;
 			break;
 		}
 #ifdef DEBUG
