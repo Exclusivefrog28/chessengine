@@ -72,8 +72,7 @@ public:
 
     void unMakeMove();
 
-    bool isRepetition() const;
-
+    bool isDraw() const;
 
 private:
     void movePiece(int_fast8_t start, int_fast8_t end);

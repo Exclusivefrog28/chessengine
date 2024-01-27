@@ -16,6 +16,10 @@ namespace Interface {
 			std::getline(std::cin, input);
 			currentInstruction = interpret(input);
 
+			while (!ready) {
+				std::this_thread::sleep_for(std::chrono::milliseconds(10));
+			}
+			ready = false;
 			std::thread thread(&CLI::handleInstruction, this, currentInstruction);
 			thread.detach();
 		}
@@ -88,8 +92,10 @@ namespace Interface {
 				std::cout << "readyok" << std::endl;
 				break;
 			case ucinewgame:
+				ready = false;
 				Search::tt.clear();
 				board = ChessBoard();
+				ready = true;
 				break;
 			case position: {
 				int startIndex = 1;
@@ -142,5 +148,6 @@ namespace Interface {
 			default:
 				break;
 		}
+		ready = true;
 	}
 }

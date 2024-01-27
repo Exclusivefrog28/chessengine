@@ -19,7 +19,7 @@ Move Search::search(ChessBoard&board, const int timeAllowed) {
 	const auto start = std::chrono::steady_clock::now();
 
 	int i = 1;
-	for (; i < 100; ++i) {
+	for (; i < 64; ++i) {
 		std::cout << "info depth " << i << std::endl;
 
 		std::thread thread(&Search::threadedSearch, &search, i);
@@ -42,7 +42,6 @@ Move Search::search(ChessBoard&board, const int timeAllowed) {
 		if (search.lastPV.size() > i) {
 			i = search.lastPV.size();
 		}
-		//if (abs(tt.getEntry(board.hashCode, 0).score) == MATE_SCORE) break;
 	}
 #ifdef wasm
 	printf("Depth: %d\n", i - 1);
@@ -89,15 +88,21 @@ void Search::threadedSearch(int depth) {
 
 int Search::alphaBeta(const int depth, int alpha, int beta, const int ply) {
 	if (stop) { return 0; }
+
+	if (ply > 0) {
+		//50 move rule
+		if (board.isDraw()) return 0;
+
+		alpha = std::max(alpha, -MATE_SCORE + ply);
+		beta = std::min(beta, MATE_SCORE - ply);
+		if (alpha >= beta) return alpha;
+	}
+
 	if (depth == 0) return quiesce(alpha, beta, ply, 0);
 
 	Move hashMove = NULL_MOVE;
 	int positionScore = 0;
 	if (getTransposition(board.hashCode, depth, ply, positionScore, alpha, beta, hashMove)) return positionScore;
-
-	alpha = std::max(alpha, -MATE_SCORE + ply);
-	beta = std::min(beta, MATE_SCORE - ply);
-	if (alpha >= beta) return alpha;
 
 	std::vector<ScoredMove> moves = scoreMoves(MoveGenerator::pseudoLegalMoves(board), ply, hashMove);
 
@@ -117,14 +122,7 @@ int Search::alphaBeta(const int depth, int alpha, int beta, const int ply) {
 
 		hasLegalMoves = true;
 
-		//50 move rule
-		bool draw = board.halfMoveClock >= 100 &&
-		            !(board.squares[move.end].type == PAWN || move.flag >= 1 || move.promotionType != EMPTY);
-
-		//repetition
-		if (!draw) draw = board.isRepetition();
-
-		const int score = draw ? 0 : -alphaBeta(depth - 1, -beta, -alpha, ply + 1);
+		const int score = -alphaBeta(depth - 1, -beta, -alpha, ply + 1);
 		board.unMakeMove();
 
 		if (stop) return 0;
@@ -135,7 +133,7 @@ int Search::alphaBeta(const int depth, int alpha, int beta, const int ply) {
 				history[board.sideToMove][move.start][move.end] += depth * depth;
 			}
 
-			tt.setEntry(board, move, depth, beta, TranspositionTable::LOWERBOUND, ply);
+			tt.setEntry(board, move, depth, score, TranspositionTable::LOWERBOUND, ply);
 
 			return score;
 		}
@@ -162,6 +160,9 @@ int Search::alphaBeta(const int depth, int alpha, int beta, const int ply) {
 
 int Search::quiesce(int alpha, int beta, const int ply, const int depth) {
 	if (stop) return 0;
+
+	if (board.isDraw()) return 0;
+
 	const int stand_pat = Evaluator::evaluate(board);
 	if (stand_pat >= beta)
 		return beta;
@@ -190,15 +191,14 @@ int Search::quiesce(int alpha, int beta, const int ply, const int depth) {
 			board.unMakeMove();
 			continue;
 		}
-		const bool draw = board.isRepetition();
 
-		const int score = draw ? 0 : -quiesce(-beta, -alpha, ply + 1, depth - 1);
+		const int score = -quiesce(-beta, -alpha, ply + 1, depth - 1);
 		board.unMakeMove();
 
 		if (stop) return 0;
 
 		if (score >= beta) {
-			tt.setEntry(board, move, depth, beta, TranspositionTable::LOWERBOUND, ply);
+			tt.setEntry(board, move, depth, score, TranspositionTable::LOWERBOUND, ply);
 			return score;
 		}
 		if (score > alpha) {
@@ -365,7 +365,7 @@ std::vector<Move> Search::collectPV(const int depth) const {
 	return pv;
 }
 
-bool Search::getTransposition(const uint64_t hash, const int depth, const int ply, int&score, int&alpha, int&beta, Move&hashMove) {
+bool Search::getTransposition(const uint64_t hash, const int depth, const int ply, int&score, const int&alpha, const int&beta, Move&hashMove) {
 	if (tt.contains(hash)) {
 		const TranspositionTable::Entry entry = tt.getEntry(hash, ply);
 		if (entry.depth >= depth) {

@@ -45,6 +45,8 @@ namespace Interface {
 	private:
 		ChessBoard board;
 
+		bool ready = true;
+
 		static Instruction interpret(const std::string&string);
 
 		void handleInstruction(const Instruction&instr);

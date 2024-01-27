@@ -46,7 +46,7 @@ private:
 
 	std::vector<ScoredMove> scoreTacticalMoves(const std::vector<Move>&moves, const Move&hashMove) const;
 
-	static bool getTransposition(uint64_t hash, int depth, int ply, int&score, int&alpha, int&beta, Move&hashMove);
+	static bool getTransposition(uint64_t hash, int depth, int ply, int&score, const int&alpha, const int&beta, Move&hashMove);
 
 	static Move selectMove(std::vector<ScoredMove>&moves, int index);
 

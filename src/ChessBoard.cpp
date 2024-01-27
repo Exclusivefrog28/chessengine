@@ -146,6 +146,23 @@ void ChessBoard::unMakeMove() {
 	hashCode ^= hashCodes.blackToMoveCode;
 }
 
+bool ChessBoard::isDraw() const {
+	// 50 move rule
+	if (halfMoveClock >= 100) return true;
+	// repetition
+	for (int j = positionHistory.size() - 4;
+		 j >= 0 && (irreversibleIndices.empty() || irreversibleIndices.back() < j);
+		 j -= 2) {
+		if (positionHistory[j] == hashCode) {
+			return true;
+		}
+		 }
+	// insufficient material
+	if (whitePieces.empty() && whitePawns.empty() && blackPieces.empty() && blackPawns.empty()) return true;
+
+	return false;
+}
+
 void ChessBoard::movePiece(int_fast8_t start, int_fast8_t end) {
 	if (squares[end].type != EMPTY) removePiece(end);
 
@@ -272,18 +289,6 @@ void ChessBoard::updateCastlingRights(const Move&move) {
 	}
 }
 
-
-bool ChessBoard::isRepetition() const {
-	for (int j = positionHistory.size() - 4;
-	     j >= 0 && (irreversibleIndices.empty() || irreversibleIndices.back() < j);
-	     j -= 2) {
-		if (positionHistory[j] == hashCode) {
-			return true;
-		}
-	}
-	return false;
-}
-
 std::string ChessBoard::fen() const {
 	std::string fen;
 	for (int i = 0; i < 8; ++i) {
@@ -334,7 +339,6 @@ std::string ChessBoard::fen() const {
 }
 
 void ChessBoard::setPosition(const std::string&fen) {
-	if (!positionHistory.empty()) positionHistory.push_back(hashCode);
 	hashCode = hashCodes.initialCode;
 	int_fast8_t position = 0;
 	int index = 0;
@@ -347,7 +351,8 @@ void ChessBoard::setPosition(const std::string&fen) {
 	blackKing = -1;
 	squares = std::array<Square, 64>();
 	enPassantSquare = -1;
-
+	positionHistory = std::vector<uint64_t>();
+	irreversibleIndices = std::vector<int>();
 
 	while (fen[index] != ' ') {
 		if (fen[index] == '/') {

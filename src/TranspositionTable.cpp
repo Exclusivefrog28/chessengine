@@ -73,5 +73,12 @@ int TranspositionTable::occupancy() const {
 }
 
 void TranspositionTable::clear() {
-	entries = std::array<Entry, TT_SIZE>();
+	resetCounters();
+	for (Entry&entry: entries) {
+		entry.nodeType = EMPTY;
+		entry.depth = 0;
+		entry.score = 0;
+		entry.key = 0;
+		entry.bestMove = NULL_MOVE;
+	}
 }
