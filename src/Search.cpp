@@ -4,7 +4,6 @@
 #include "TranspositionTable.h"
 #include <unordered_set>
 #include <chrono>
-#include <string>
 #include <thread>
 
 #define MATE_SCORE 65536
@@ -30,6 +29,7 @@ Move Search::search(ChessBoard&board, const int timeAllowed) {
 
 		const auto timeAvailable = start + timeOut - std::chrono::steady_clock::now();
 
+
 		if (search.cv.wait_for(lk, timeAvailable, [&] { return search.finished; })) {
 			thread.join();
 		}
@@ -38,6 +38,7 @@ Move Search::search(ChessBoard&board, const int timeAllowed) {
 			thread.join();
 			break;
 		}
+
 		search.lastPV = search.collectPV(i);
 		if (search.lastPV.size() > i) {
 			i = search.lastPV.size();
@@ -63,6 +64,7 @@ Move Search::search(ChessBoard&board, const int timeAllowed) {
 #endif
 
 	tt.resetCounters();
+	search.lastPV = search.collectPV(i);
 
 	if (search.lastPV.empty()) {
 		auto entry = tt.getEntry(board.hashCode, 0);
