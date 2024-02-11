@@ -14,7 +14,8 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(Catch2)
 list(APPEND CMAKE_MODULE_PATH ${catch2_SOURCE_DIR}/extras)
 
-add_executable(tests_run RepetitionTest.cpp)
+add_executable(tests_run RepetitionTest.cpp
+        HashTest.cpp)
 target_link_libraries(tests_run PRIVATE src)
 target_link_libraries(tests_run PRIVATE Catch2::Catch2WithMain)
 

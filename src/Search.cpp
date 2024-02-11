@@ -6,6 +6,10 @@
 #include <chrono>
 #include <thread>
 
+#ifdef wasm
+#include "emscripten.h"
+#endif
+
 #define MATE_SCORE 65536
 
 TranspositionTable Search::tt = TranspositionTable();
@@ -61,6 +65,12 @@ Move Search::search(ChessBoard&board, const int timeAllowed) {
 	printf("\nTT collisions: %d", tt.collisions);
 	printf("\nTT occupancy: %d", tt.occupancy());
 	printf("\n**************************\n");
+	std::string jsCode = "postMessage({task: 'updateMeters', depth: ";
+	jsCode += std::to_string(i - 1);
+	jsCode += ", tt: ";
+	jsCode += std::to_string(tt.occupancy());
+	jsCode +=  "})";
+	emscripten_run_script(jsCode.c_str());
 #endif
 
 	tt.resetCounters();

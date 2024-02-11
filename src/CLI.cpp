@@ -56,10 +56,10 @@ namespace Interface {
 		}
 		else {
 			if (startSquare.type == PAWN) {
-				if (startPos / 8 == 2 && endPos / 8 == 4 || startPos / 8 == 7 && endPos / 8 == 5) {
+				if (startPos / 8 == 1 && endPos / 8 == 3 || startPos / 8 == 6 && endPos / 8 == 4) {
 					flag = DOUBLEPAWNPUSH;
 				}
-				if (abs(startPos - endPos) == 7 || abs(startPos - endPos) == 9) {
+				else if (abs(startPos - endPos) == 7 || abs(startPos - endPos) == 9) {
 					flag = ENPASSANT;
 				}
 			}
