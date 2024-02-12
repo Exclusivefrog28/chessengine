@@ -1,7 +1,7 @@
 #include <catch2/catch_test_macros.hpp>
 #include "CLI.h"
 
-TEST_CASE("Repetition by White", "[RepetitionTests]") {
+TEST_CASE("Repetitions - by White", "[RepetitionTests]") {
 	ChessBoard board = ChessBoard();
 	board.setPosition("2r2rk1/1q1b1pp1/2nppn1p/3p4/N2P1N1P/4PB2/1P1Q1PP1/2R1R1K1 b - - 6 23");
 	CHECK(!board.isDraw());
@@ -15,7 +15,7 @@ TEST_CASE("Repetition by White", "[RepetitionTests]") {
 	CHECK(board.isDraw());
 }
 
-TEST_CASE("Repetition by Black", "[RepetitionTests]") {
+TEST_CASE("Repetitions - by Black", "[RepetitionTests]") {
 	ChessBoard board = ChessBoard();
 	board.setPosition("2r2rk1/1q1b1pp1/2nppn1p/3p4/N2P1N1P/4PB2/1P3PP1/2RQR1K1 w - - 5 23");
 	CHECK(!board.isDraw());
@@ -29,7 +29,7 @@ TEST_CASE("Repetition by Black", "[RepetitionTests]") {
 	CHECK(board.isDraw());
 }
 
-TEST_CASE("No repetition by White", "[RepetitionTests]") {
+TEST_CASE("Repetitions - No repetition by White", "[RepetitionTests]") {
 	ChessBoard board = ChessBoard();
 	board.setPosition("2r2rk1/1q1b1pp1/2nppn1p/3p4/N2P1N1P/4PB2/1P1Q1PP1/2R1R1K1 b - - 6 23");
 	CHECK(!board.isDraw());
@@ -43,7 +43,7 @@ TEST_CASE("No repetition by White", "[RepetitionTests]") {
 	CHECK(!board.isDraw());
 }
 
-TEST_CASE("No repetition by Black", "[RepetitionTests]") {
+TEST_CASE("Repetitions - No repetition by Black", "[RepetitionTests]") {
 	ChessBoard board = ChessBoard();
 	board.setPosition("2r2rk1/1q1b1pp1/2nppn1p/3p4/N2P1N1P/4PB2/1P3PP1/2RQR1K1 w - - 5 23");
 	CHECK(!board.isDraw());
@@ -57,7 +57,7 @@ TEST_CASE("No repetition by Black", "[RepetitionTests]") {
 	CHECK(!board.isDraw());
 }
 
-TEST_CASE("Repetition after irreversible move", "[RepetitionTests]") {
+TEST_CASE("Repetitions - after irreversible move", "[RepetitionTests]") {
 	ChessBoard board = ChessBoard();
 	board.setPosition("2r2rk1/1q1b1pp1/2nppn1p/3p4/N2P1N1P/4PB2/1P3PP1/2RQR1K1 w - - 5 23");
 	CHECK(!board.isDraw());
@@ -73,7 +73,7 @@ TEST_CASE("Repetition after irreversible move", "[RepetitionTests]") {
 	CHECK(board.isDraw());
 }
 
-TEST_CASE("Irreversible Moves", "[RepetitionTests]") {
+TEST_CASE("Repetitions - Irreversible Moves", "[RepetitionTests]") {
 	ChessBoard board = ChessBoard();
 	board.setPosition("2r2rk1/1q1b1pp1/2nppn1p/3p4/N2P1N1P/4PB2/1P3PP1/2RQR1K1 w - - 5 23");
 	CHECK(!board.isDraw());
