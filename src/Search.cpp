@@ -65,11 +65,11 @@ Move Search::search(ChessBoard&board, const int timeAllowed) {
 	printf("\nTT collisions: %d", tt.collisions);
 	printf("\nTT occupancy: %d", tt.occupancy());
 	printf("\n**************************\n");
-	std::string jsCode = "postMessage({task: 'updateMeters', depth: ";
+	std::string jsCode = "postMessage({name: 'updateMeters', args: [{depth: ";
 	jsCode += std::to_string(i - 1);
 	jsCode += ", tt: ";
 	jsCode += std::to_string(tt.occupancy());
-	jsCode +=  "})";
+	jsCode +=  "}]})";
 	emscripten_run_script(jsCode.c_str());
 #endif
 
