@@ -2,7 +2,6 @@ cmake_minimum_required(VERSION 3.25)
 project(ChessEngine)
 
 set(CMAKE_CXX_STANDARD 23)
-
 option(WASM "Build Webassembly binary" TRUE)
 
 add_executable(ChessEngine main.cpp)
@@ -11,6 +10,7 @@ message("WASM=${WASM}")
 if (WASM)
     message("Building for Webassembly")
     add_compile_definitions(wasm)
+    set(CMAKE_CXX_FLAGS "-std=c++23 -fexperimental-library")
 endif ()
 
 include_directories(src)

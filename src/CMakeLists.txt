@@ -21,6 +21,8 @@ set(SOURCE_FILES
         MoveGenerator.cpp
         Search.cpp
         TranspositionTable.cpp
+        Logger.cpp
+        Logger.h
 )
 
 add_library(src STATIC ${SOURCE_FILES} ${HEADER_FILES})

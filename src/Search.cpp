@@ -5,6 +5,7 @@
 #include <unordered_set>
 #include <chrono>
 #include <thread>
+#include <format>
 
 #ifdef wasm
 #include "emscripten.h"
@@ -16,6 +17,7 @@ TranspositionTable Search::tt = TranspositionTable();
 
 Move Search::search(ChessBoard&board, const int timeAllowed) {
 	Search search = Search(board);
+	search.logger.start();
 
 	const auto timeOut = std::chrono::milliseconds(timeAllowed);
 
@@ -23,7 +25,7 @@ Move Search::search(ChessBoard&board, const int timeAllowed) {
 
 	int i = 1;
 	for (; i < 64; ++i) {
-		std::cout << "info depth " << i << std::endl;
+		search.logger.log(std::format("info depth {}\n", i));
 
 		std::thread thread(&Search::threadedSearch, &search, i);
 
@@ -82,6 +84,9 @@ Move Search::search(ChessBoard&board, const int timeAllowed) {
 				", depth- " << entry.depth << ", score- " << entry.score << std::endl;
 		return NULL_MOVE;
 	}
+
+	search.logger.end();
+
 	return search.lastPV[0];
 }
 
@@ -102,7 +107,7 @@ int Search::alphaBeta(const int depth, int alpha, int beta, const int ply) {
 	if (stop) { return 0; }
 
 	if (ply > 0) {
-		//50 move rule
+		//repetitions
 		if (board.isDraw()) return 0;
 
 		alpha = std::max(alpha, -MATE_SCORE + ply);
@@ -173,6 +178,7 @@ int Search::alphaBeta(const int depth, int alpha, int beta, const int ply) {
 int Search::quiesce(int alpha, int beta, const int ply, const int depth) {
 	if (stop) return 0;
 
+	//repetitions
 	if (board.isDraw()) return 0;
 
 	const int stand_pat = Evaluator::evaluate(board);
@@ -300,7 +306,7 @@ Move Search::selectMove(std::vector<ScoredMove>&moves, const int index) {
 	return selected.move;
 }
 
-void Search::storeKillerMove(Move move, int ply) {
+void Search::storeKillerMove(const Move move, const int ply) {
 	if ((move.flag == 0 || move.flag >= 7) && move.promotionType == 0) {
 		if (killerMoves[ply][0] == move) return;
 		if (killerMoves[ply][1] == move) return;
@@ -364,11 +370,11 @@ std::vector<Move> Search::collectPV(const int depth) const {
 		scores.push_back(entry.score);
 		pvDepth++;
 	}
-	std::cout << "info PV: ";
+	logger.log("info PV: ");
 	for (int i = 0; i < pv.size(); ++i) {
-		std::cout << "[" << pv[i] << " - " << scores[i] << "] ";
+		logger.log(std::format("[{} - {}] ", pv[i].toString(), scores[i]));
 	}
-	std::cout << std::endl;
+	logger.log("\n");
 
 	for (; pvDepth > 0; --pvDepth) {
 		board.unMakeMove();

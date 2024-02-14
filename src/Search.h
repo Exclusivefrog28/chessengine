@@ -9,6 +9,8 @@
 #include <condition_variable>
 #include <cstdint>
 
+#include "Logger.h"
+
 using namespace Moves;
 
 struct ScoredMove {
@@ -35,6 +37,8 @@ private:
 	std::mutex cv_m;
 	bool finished = false;
 	std::atomic<bool> stop{false};
+
+	Logger logger;
 
 	void threadedSearch(int depth);
 

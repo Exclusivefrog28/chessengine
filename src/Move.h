@@ -1,6 +1,7 @@
 #ifndef CHESSENGINE_MOVE_H
 #define CHESSENGINE_MOVE_H
 #include <cstdint>
+#include <format>
 #include <iostream>
 #include "Piece.h"
 #include "Util.h"
@@ -32,13 +33,17 @@ namespace Moves {
 			return (start == other.start && end == other.end && promotionType == other.promotionType &&
 			        flag == other.flag && player == other.player);
 		}
+
+		std::string toString() const {
+			std::string str = Util::positionToString(start);
+			str += Util::positionToString(end);
+			if (promotionType != Pieces::EMPTY) str += Util::pieceToString(promotionType, Color::BLACK);
+			return str;
+		}
 	};
 
 	inline std::ostream& operator<<(std::ostream&os, const Move&move) {
-		const std::string promotion = (move.promotionType != Pieces::EMPTY)
-												  ? Util::pieceToString(move.promotionType, Color::BLACK)
-												  : "";
-		os << Util::positionToString(move.start) << Util::positionToString(move.end) << promotion;
+		os << move.toString();
 		return os;
 	}
 
@@ -83,4 +88,5 @@ namespace Moves {
 		{-11, -10, -9, -1, 1, 9, 10, 11}
 	};
 }
+
 #endif //CHESSENGINE_MOVE_H
