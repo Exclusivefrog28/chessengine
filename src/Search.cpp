@@ -61,14 +61,15 @@ Move Search::search(ChessBoard&board, const int timeAllowed) {
 	for (const Move&move: search.lastPV) {
 		printf("%s%s ", Util::positionToString(move.start).c_str(), Util::positionToString(move.end).c_str());
 	}
+	const int occupancy = tt.occupancy();
 	printf("\nBoard hash: %llu", board.hashCode);
 	printf("\nTT reads: %d", tt.reads);
 	printf("\nTT writes: %d", tt.writes);
 	printf("\nTT collisions: %d", tt.collisions);
-	printf("\nTT occupancy: %d", tt.occupancy());
+	printf("\nTT occupancy: %d", occupancy);
 	printf("\n**************************\n");
-	search.logger.sendData("updateDepth", i - 1);
-	search.logger.sendData("updateTTOccupancy", tt.occupancy());
+	search.logger.sendInt("updateDepth", i - 1);
+	search.logger.sendInt("updateTTOccupancy", tt.occupancy());
 #endif
 
 	tt.resetCounters();
@@ -367,9 +368,12 @@ std::vector<Move> Search::collectPV(const int depth) const {
 		pvDepth++;
 	}
 	logger.log("info PV: ");
+	std::string pvString;
 	for (int i = 0; i < pv.size(); ++i) {
+		pvString += pv[i].toString() + " ";
 		logger.log(std::format("[{} - {}] ", pv[i].toString(), scores[i]));
 	}
+	logger.sendString("updatePV", pvString);
 	logger.log("\n");
 
 	for (; pvDepth > 0; --pvDepth) {

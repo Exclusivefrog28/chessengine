@@ -26,14 +26,25 @@ void Logger::log(const std::string&message) const {
 	tail = newNode;
 }
 
-void Logger::sendData(const std::string&name, const int value) const {
-	auto* newNode = new DataNode();
-	newNode->type = DATA;
+void Logger::sendInt(const std::string&name, const int value) const {
+	auto* newNode = new IntNode();
+	newNode->type = INT;
 	newNode->name = name;
 	newNode->value = value;
 	tail->next = newNode;
 	tail = newNode;
 }
+
+
+void Logger::sendString(const std::string&name, const std::string&value) const {
+	auto* newNode = new StringNode();
+	newNode->type = STRING;
+	newNode->name = name;
+	newNode->value = value;
+	tail->next = newNode;
+	tail = newNode;
+}
+
 
 Logger::Logger() {
 	this->head = new MessageNode();
@@ -61,11 +72,23 @@ bool Logger::processNode() const {
 
 		if (newHead->type == LOG) std::cout << reinterpret_cast<MessageNode *>(newHead)->msg;
 #ifdef wasm
-		else
-			MAIN_THREAD_ASYNC_EM_ASM(
-			postMessage({data: [$1], name: UTF8ToString($0)})
-			, reinterpret_cast<DataNode*>(newHead)->name.c_str(), reinterpret_cast<DataNode*>(newHead)->value);
-
+		else {
+			switch (newHead->type) {
+				case STRING: {
+					MAIN_THREAD_ASYNC_EM_ASM(
+						postMessage({data: [UTF8ToString($1)], name: UTF8ToString($0)})
+						, reinterpret_cast<StringNode *>(newHead)->name.c_str(), reinterpret_cast<StringNode *>(newHead)->value.c_str());
+					break;
+				}
+				case INT: {
+					MAIN_THREAD_ASYNC_EM_ASM(
+						postMessage({data: [$1], name: UTF8ToString($0)})
+						, reinterpret_cast<IntNode *>(newHead)->name.c_str(), reinterpret_cast<IntNode *>(newHead)->value);
+					break;
+				}
+				default: break;
+			}
+		}
 #endif
 
 		delete head;

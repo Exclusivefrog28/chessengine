@@ -12,6 +12,7 @@ set(HEADER_FILES
         Search.h
         TranspositionTable.h
         Util.h
+        Logger.h
 )
 
 set(SOURCE_FILES
@@ -22,7 +23,6 @@ set(SOURCE_FILES
         Search.cpp
         TranspositionTable.cpp
         Logger.cpp
-        Logger.h
 )
 
 add_library(src STATIC ${SOURCE_FILES} ${HEADER_FILES})

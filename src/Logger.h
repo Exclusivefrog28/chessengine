@@ -2,11 +2,11 @@
 #define LOGGER_H
 #include <string>
 #include <thread>
-#include <vector>
 
 enum MessageType {
 	LOG = 0,
-	DATA = 1
+	INT = 1,
+	STRING = 2
 };
 
 struct Node {
@@ -18,7 +18,12 @@ struct MessageNode : Node {
 	std::string msg;
 };
 
-struct DataNode : Node {
+struct StringNode : Node {
+	std::string name;
+	std::string value;
+};
+
+struct IntNode : Node {
 	std::string name;
 	int value;
 };
@@ -31,7 +36,9 @@ public:
 
 	void log(const std::string&message) const;
 
-	void sendData(const std::string&name, int value) const;
+	void sendInt(const std::string&name, int value) const;
+
+	void sendString(const std::string&name, const std::string&value) const;
 
 	Logger();
 
@@ -48,6 +55,5 @@ private:
 	std::thread processingThread;
 	bool stop;
 };
-
 
 #endif //LOGGER_H
