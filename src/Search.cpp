@@ -367,14 +367,15 @@ std::vector<Move> Search::collectPV(const int depth) const {
 		scores.push_back(entry.score);
 		pvDepth++;
 	}
-	logger.log("info PV: ");
 	std::string pvString;
+	std::string pvStringWithScores = "info PV: ";
 	for (int i = 0; i < pv.size(); ++i) {
 		pvString += pv[i].toString() + " ";
-		logger.log(std::format("[{} - {}] ", pv[i].toString(), scores[i]));
+		pvStringWithScores += std::format("[{} - {}] ", pv[i].toString(), scores[i]);
 	}
+	pvStringWithScores += "\n";
+	logger.log(pvStringWithScores);
 	logger.sendString("updatePV", pvString);
-	logger.log("\n");
 
 	for (; pvDepth > 0; --pvDepth) {
 		board.unMakeMove();

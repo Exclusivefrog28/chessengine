@@ -34,11 +34,11 @@ public:
 
 	void end();
 
-	void log(const std::string&message) const;
+	void log(std::string message) const;
 
-	void sendInt(const std::string&name, int value) const;
+	void sendInt(std::string name, int value) const;
 
-	void sendString(const std::string&name, const std::string&value) const;
+	void sendString(std::string name, std::string value) const;
 
 	Logger();
 
