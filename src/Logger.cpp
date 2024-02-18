@@ -11,16 +11,26 @@
 void Logger::start() {
 	stop = false;
 	processingThread = std::thread(&Logger::threadFunc, this);
+	logFile.open("log.txt");
 }
 
 void Logger::end() {
 	stop = true;
 	processingThread.join();
+	logFile.close();
 }
 
 void Logger::log(const std::string message) const {
 	auto* newNode = new MessageNode();
 	newNode->type = LOG;
+	newNode->msg = message;
+	tail->next = newNode;
+	tail = newNode;
+}
+
+void Logger::logToFile(std::string message) const {
+	auto* newNode = new MessageNode();
+	newNode->type = TOFILE;
 	newNode->msg = message;
 	tail->next = newNode;
 	tail = newNode;
@@ -34,7 +44,6 @@ void Logger::sendInt(const std::string name, const int value) const {
 	tail->next = newNode;
 	tail = newNode;
 }
-
 
 void Logger::sendString(const std::string name, const std::string value) const {
 	auto* newNode = new StringNode();
@@ -73,6 +82,9 @@ bool Logger::processNode() const {
 #ifndef wasm
 		if (newHead->type == LOG) {
 			std::cout << reinterpret_cast<MessageNode *>(newHead)->msg;
+		}
+		else if (newHead->type == TOFILE) {
+			logFile << reinterpret_cast<MessageNode *>(newHead)->msg;
 		}
 #endif
 

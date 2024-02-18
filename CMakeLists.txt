@@ -6,6 +6,8 @@ option(WASM "Build Webassembly binary" TRUE)
 
 add_executable(ChessEngine main.cpp)
 
+set(CMAKE_CXX_FLAGS "-std=c++23")
+
 message("WASM=${WASM}")
 if (WASM)
     message("Building for Webassembly")

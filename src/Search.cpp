@@ -18,14 +18,15 @@ TranspositionTable Search::tt = TranspositionTable();
 Move Search::search(ChessBoard&board, const int timeAllowed) {
 	Search search = Search(board);
 	search.logger.start();
+	search.logger.logToFile("starting search\n");
 
 	const auto timeOut = std::chrono::milliseconds(timeAllowed);
 
 	const auto start = std::chrono::steady_clock::now();
-
 	int i = 1;
 	for (; i < 64; ++i) {
-		search.logger.log(std::format("info depth {}\n", i));
+		search.logger.log(std::format("info searching depth {}\n", i));
+		search.logger.logToFile(std::format("starting depth {}\n", i));
 
 		std::thread thread(&Search::threadedSearch, &search, i);
 
@@ -91,7 +92,9 @@ void Search::threadedSearch(int depth) {
 	constexpr int alpha = INT32_MIN + 1;
 	constexpr int beta = INT32_MAX;
 
+	logger.logToFile("tree root\n");
 	alphaBeta(depth, alpha, beta, 0);
+	logger.logToFile("tree end root\n");
 	if (stop) return;
 
 	std::lock_guard<std::mutex> lk(cv_m);
@@ -105,7 +108,10 @@ int Search::alphaBeta(const int depth, int alpha, int beta, const int ply) {
 
 	if (ply > 0) {
 		//repetitions
-		if (board.isDraw()) return 0;
+		if (board.isDraw()) {
+			logger.logToFile("draw, score: 0\n");
+			return 0;
+		}
 
 		alpha = std::max(alpha, -MATE_SCORE + ply);
 		beta = std::min(beta, MATE_SCORE - ply);
@@ -116,7 +122,10 @@ int Search::alphaBeta(const int depth, int alpha, int beta, const int ply) {
 
 	Move hashMove = NULL_MOVE;
 	int positionScore = 0;
-	if (getTransposition(board.hashCode, depth, ply, positionScore, alpha, beta, hashMove)) return positionScore;
+	if (getTransposition(board.hashCode, depth, ply, positionScore, alpha, beta, hashMove)) {
+		logger.logToFile(std::format("transposition found | depth: {} score: {}\n", depth, positionScore));
+		return positionScore;
+	}
 
 	std::vector<ScoredMove> moves = scoreMoves(MoveGenerator::pseudoLegalMoves(board), ply, hashMove);
 
@@ -133,10 +142,13 @@ int Search::alphaBeta(const int depth, int alpha, int beta, const int ply) {
 			board.unMakeMove();
 			continue;
 		}
+		logger.logToFile("tree " + move.toString() + "\n");
 
 		hasLegalMoves = true;
 
 		const int score = -alphaBeta(depth - 1, -beta, -alpha, ply + 1);
+
+		logger.logToFile("tree end " + move.toString() + "\n");
 		board.unMakeMove();
 
 		if (stop) return 0;
@@ -148,7 +160,7 @@ int Search::alphaBeta(const int depth, int alpha, int beta, const int ply) {
 			}
 
 			tt.setEntry(board, move, depth, score, TranspositionTable::LOWERBOUND, ply);
-
+			logger.logToFile("beta cutoff\n");
 			return score;
 		}
 		if (score > alpha) {
@@ -166,7 +178,7 @@ int Search::alphaBeta(const int depth, int alpha, int beta, const int ply) {
 		if (MoveGenerator::inCheck(board, board.sideToMove)) return -(MATE_SCORE - ply);
 		return 0;
 	}
-
+	logger.logToFile("bestmove " + bestMove.toString() + "\n");
 	tt.setEntry(board, bestMove, depth, alpha, nodeType, ply);
 
 	return alpha;

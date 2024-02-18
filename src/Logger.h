@@ -2,11 +2,13 @@
 #define LOGGER_H
 #include <string>
 #include <thread>
+#include <fstream>
 
 enum MessageType {
 	LOG = 0,
 	INT = 1,
-	STRING = 2
+	STRING = 2,
+	TOFILE = 3
 };
 
 struct Node {
@@ -36,6 +38,8 @@ public:
 
 	void log(std::string message) const;
 
+	void logToFile(std::string message) const;
+
 	void sendInt(std::string name, int value) const;
 
 	void sendString(std::string name, std::string value) const;
@@ -47,6 +51,7 @@ public:
 private:
 	mutable Node* head;
 	mutable Node* tail;
+	mutable std::ofstream logFile;
 
 	void threadFunc() const;
 
