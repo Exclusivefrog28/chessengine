@@ -92,9 +92,9 @@ void Search::threadedSearch(int depth) {
 	constexpr int alpha = INT32_MIN + 1;
 	constexpr int beta = INT32_MAX;
 
-	logger.logToFile("tree root\n");
+	logger.logToFile("root begin\n");
 	alphaBeta(depth, alpha, beta, 0);
-	logger.logToFile("tree end root\n");
+	logger.logToFile("root end\n");
 	if (stop) return;
 
 	std::lock_guard<std::mutex> lk(cv_m);
@@ -142,13 +142,13 @@ int Search::alphaBeta(const int depth, int alpha, int beta, const int ply) {
 			board.unMakeMove();
 			continue;
 		}
-		logger.logToFile("tree " + move.toString() + "\n");
+		logger.logToFile(move.toString() + " begin\n");
 
 		hasLegalMoves = true;
 
 		const int score = -alphaBeta(depth - 1, -beta, -alpha, ply + 1);
 
-		logger.logToFile("tree end " + move.toString() + "\n");
+		logger.logToFile(std::format("{} end score : {}\n", move.toString(), score));
 		board.unMakeMove();
 
 		if (stop) return 0;
