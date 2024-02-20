@@ -1,7 +1,6 @@
 #include "Logger.h"
 
 #include <iostream>
-#include <format>
 
 #ifdef wasm
 #include "emscripten.h"
@@ -11,13 +10,17 @@
 void Logger::start() {
 	stop = false;
 	processingThread = std::thread(&Logger::threadFunc, this);
+#ifdef logtofile
 	logFile.open("log.txt");
+#endif
 }
 
 void Logger::end() {
 	stop = true;
 	processingThread.join();
+#ifdef logtofile
 	logFile.close();
+#endif
 }
 
 void Logger::log(const std::string message) const {
@@ -29,29 +32,38 @@ void Logger::log(const std::string message) const {
 }
 
 void Logger::logToFile(std::string message) const {
+	// Since the function doesn't do anything with the flag disabled the compiler should technically remove it and all the calls to it
+#ifdef logtofile
 	auto* newNode = new MessageNode();
 	newNode->type = TOFILE;
 	newNode->msg = message;
 	tail->next = newNode;
 	tail = newNode;
+#endif
 }
 
 void Logger::sendInt(const std::string name, const int value) const {
+	// Since the function doesn't do anything with the flag disabled the compiler should technically remove it and all the calls to it
+#ifdef wasm
 	auto* newNode = new IntNode();
 	newNode->type = INT;
 	newNode->name = name;
 	newNode->value = value;
 	tail->next = newNode;
 	tail = newNode;
+#endif
 }
 
 void Logger::sendString(const std::string name, const std::string value) const {
+	// Since the function doesn't do anything with the flag disabled the compiler should technically remove it and all the calls to it
+#ifdef wasm
 	auto* newNode = new StringNode();
 	newNode->type = STRING;
 	newNode->name = name;
 	newNode->value = value;
 	tail->next = newNode;
 	tail = newNode;
+#endif
 }
 
 
@@ -83,9 +95,11 @@ bool Logger::processNode() const {
 		if (newHead->type == LOG) {
 			std::cout << reinterpret_cast<MessageNode *>(newHead)->msg;
 		}
+#ifdef logtofile
 		else if (newHead->type == TOFILE) {
 			logFile << reinterpret_cast<MessageNode *>(newHead)->msg;
 		}
+#endif
 #endif
 
 #ifdef wasm

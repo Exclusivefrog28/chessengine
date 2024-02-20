@@ -3,16 +3,21 @@ project(ChessEngine)
 
 set(CMAKE_CXX_STANDARD 23)
 option(WASM "Build Webassembly binary" TRUE)
+option(LOGTOFILE "Make a file with a detailed search log" FALSE)
 
 add_executable(ChessEngine main.cpp)
 
 set(CMAKE_CXX_FLAGS "-std=c++23")
 
-message("WASM=${WASM}")
 if (WASM)
     message("Building for Webassembly")
     add_compile_definitions(wasm)
     set(CMAKE_CXX_FLAGS "-std=c++23 -fexperimental-library")
+endif ()
+
+if (LOGTOFILE)
+    message("Logging to file enabled")
+    add_compile_definitions(logtofile)
 endif ()
 
 include_directories(src)
