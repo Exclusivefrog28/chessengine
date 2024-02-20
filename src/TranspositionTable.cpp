@@ -4,15 +4,16 @@
 
 #include "MoveGenerator.h"
 
-#define MATE_SCORE 65536
+#define MATE_SCORE 32768 // 1 << 15
+#define MIN_MATE_SCORE 16384 // 1 << 14
 
 TranspositionTable::Entry TranspositionTable::getEntry(const uint64_t key, const int ply) {
 	const int index = key % TT_SIZE;
 	Entry entry = entries[index];
 
-	if (abs(entry.score) == MATE_SCORE) {
-		int sign = entry.score > 0 ? 1 : -1;
-		entry.score = sign * (MATE_SCORE - ply);
+	if (abs(entry.score) >= MIN_MATE_SCORE) {
+		const int sign = entry.score > 0 ? 1 : -1;
+		entry.score = sign * (abs(entry.score) - ply);
 	}
 	reads++;
 
@@ -31,9 +32,9 @@ bool TranspositionTable::contains(const uint64_t key) {
 void TranspositionTable::setEntry(const ChessBoard&board, const Move bestMove, const int depth, int score, const NodeType nodeType, const int ply) {
 	const int index = board.hashCode % TT_SIZE;
 
-	if (abs(score) >= MATE_SCORE - (depth + ply)) {
+	if (abs(score) >= MIN_MATE_SCORE) {
 		const int sign = score > 0 ? 1 : -1;
-		score = sign * MATE_SCORE;
+		score = sign * (abs(score) + ply);
 	}
 
 	const NodeType savedType = entries[index].nodeType;

@@ -7,11 +7,7 @@
 #include <thread>
 #include <format>
 
-#ifdef wasm
-#include "emscripten.h"
-#endif
-
-#define MATE_SCORE 65536
+#define MATE_SCORE 32768 // 1 << 15
 
 TranspositionTable Search::tt = TranspositionTable();
 
