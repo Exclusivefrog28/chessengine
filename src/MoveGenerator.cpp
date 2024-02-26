@@ -1,11 +1,17 @@
 #include "MoveGenerator.h"
 
-std::vector<Move> MoveGenerator::pseudoLegalMoves(const ChessBoard&board) {
-	std::vector<Move> moves;
+#include <cmath>
+#include <thread>
 
-	const std::vector<Piece>* pieceList = (board.sideToMove == WHITE) ? &board.whitePieces : &board.blackPieces;
+#define NUM_OF_THREADS 6
 
-	for (const Piece&piece: *pieceList) {
+void MoveGenerator::addMove(const Move&move) {
+	std::lock_guard<std::mutex> lock(movesMutex);
+	moves.push_back(move);
+}
+
+void MoveGenerator::generateMovesForPieces(const std::vector<Piece>&pieces) {
+	for (const Piece piece: pieces) {
 		for (int i = 0; i < OFFSETS[piece.type]; ++i) {
 			int_fast8_t n = piece.position;
 			while (true) {
@@ -13,12 +19,12 @@ std::vector<Move> MoveGenerator::pseudoLegalMoves(const ChessBoard&board) {
 				if (n == -1) break;
 				Square target = board.squares[n];
 				if (target.type != EMPTY) {
-					if (target.color != board.sideToMove)
-						moves.push_back(
-							{piece.position, n, EMPTY, static_cast<MoveFlag>(target.type), board.sideToMove});
+					if (target.color != board.sideToMove) {
+						addMove({piece.position, n, EMPTY, static_cast<MoveFlag>(target.type), board.sideToMove});
+					}
 					break;
 				}
-				moves.push_back({piece.position, n, EMPTY, QUIET, board.sideToMove});
+				addMove({piece.position, n, EMPTY, QUIET, board.sideToMove});
 				if (!SLIDE[piece.type]) break;
 			}
 		}
@@ -31,7 +37,7 @@ std::vector<Move> MoveGenerator::pseudoLegalMoves(const ChessBoard&board) {
 				    board.squares[kingPosition + 1].type == EMPTY &&
 				    !isSquareAttacked(board, kingPosition + 2, board.sideToMove) &&
 				    board.squares[kingPosition + 2].type == EMPTY) {
-					moves.push_back({
+					addMove({
 						kingPosition, static_cast<int_fast8_t>(kingPosition + 2), EMPTY, CASTLEKINGSIDE,
 						board.sideToMove
 					});
@@ -44,7 +50,7 @@ std::vector<Move> MoveGenerator::pseudoLegalMoves(const ChessBoard&board) {
 				    !isSquareAttacked(board, kingPosition - 2, board.sideToMove) &&
 				    board.squares[kingPosition - 2].type == EMPTY &&
 				    board.squares[kingPosition - 3].type == EMPTY) {
-					moves.push_back({
+					addMove({
 						kingPosition, static_cast<int_fast8_t>(kingPosition - 2), EMPTY, CASTLEQUEENSIDE,
 						board.sideToMove
 					});
@@ -52,27 +58,27 @@ std::vector<Move> MoveGenerator::pseudoLegalMoves(const ChessBoard&board) {
 			}
 		}
 	}
+}
 
-	const std::vector<int_fast8_t>* pawnList = (board.sideToMove == WHITE) ? &board.whitePawns : &board.blackPawns;
-
-	for (const int_fast8_t&pawnPosition: *pawnList) {
+void MoveGenerator::generateMovesForPawns(const std::vector<int_fast8_t>&pawnPositions) {
+	for (const int_fast8_t pawnPosition: pawnPositions) {
 		const int_fast8_t sign = (board.sideToMove == WHITE) ? -1 : 1;
 
 		const int_fast8_t pushTarget = pawnPosition + (sign * OFFSET[PAWN][0]);
 		if (board.squares[pushTarget].type == EMPTY) {
 			if (pushTarget <= 7 || pushTarget >= 56) {
-				moves.push_back({pawnPosition, pushTarget, KNIGHT, QUIET, board.sideToMove});
-				moves.push_back({pawnPosition, pushTarget, BISHOP, QUIET, board.sideToMove});
-				moves.push_back({pawnPosition, pushTarget, ROOK, QUIET, board.sideToMove});
-				moves.push_back({pawnPosition, pushTarget, QUEEN, QUIET, board.sideToMove});
+				addMove({pawnPosition, pushTarget, KNIGHT, QUIET, board.sideToMove});
+				addMove({pawnPosition, pushTarget, BISHOP, QUIET, board.sideToMove});
+				addMove({pawnPosition, pushTarget, ROOK, QUIET, board.sideToMove});
+				addMove({pawnPosition, pushTarget, QUEEN, QUIET, board.sideToMove});
 			}
 			else {
-				moves.push_back({pawnPosition, pushTarget, EMPTY, QUIET, board.sideToMove});
+				addMove({pawnPosition, pushTarget, EMPTY, QUIET, board.sideToMove});
 				if (pawnPosition < 16 || pawnPosition >= 48) {
 					const int_fast8_t doublePushTarget = pawnPosition + (sign * OFFSET[PAWN][3]);
-					if (board.squares[doublePushTarget].type == EMPTY)
-						moves.push_back(
-							{pawnPosition, doublePushTarget, EMPTY, DOUBLEPAWNPUSH, board.sideToMove});
+					if (board.squares[doublePushTarget].type == EMPTY) {
+						addMove({pawnPosition, doublePushTarget, EMPTY, DOUBLEPAWNPUSH, board.sideToMove});
+					}
 				}
 			}
 		}
@@ -82,28 +88,71 @@ std::vector<Move> MoveGenerator::pseudoLegalMoves(const ChessBoard&board) {
 			Square target = board.squares[n];
 			if (target.type != EMPTY && target.color != board.sideToMove) {
 				if (n <= 7 || n >= 56) {
-					moves.push_back(
-						{pawnPosition, n, KNIGHT, static_cast<MoveFlag>(target.type), board.sideToMove});
-					moves.push_back(
-						{pawnPosition, n, BISHOP, static_cast<MoveFlag>(target.type), board.sideToMove});
-					moves.push_back(
-						{pawnPosition, n, ROOK, static_cast<MoveFlag>(target.type), board.sideToMove});
-					moves.push_back(
-						{pawnPosition, n, QUEEN, static_cast<MoveFlag>(target.type), board.sideToMove});
+					addMove({pawnPosition, n, KNIGHT, static_cast<MoveFlag>(target.type), board.sideToMove});
+					addMove({pawnPosition, n, BISHOP, static_cast<MoveFlag>(target.type), board.sideToMove});
+					addMove({pawnPosition, n, ROOK, static_cast<MoveFlag>(target.type), board.sideToMove});
+					addMove({pawnPosition, n, QUEEN, static_cast<MoveFlag>(target.type), board.sideToMove});
 				}
-				else
-					moves.push_back(
-						{pawnPosition, n, EMPTY, static_cast<MoveFlag>(target.type), board.sideToMove});
+				else addMove({pawnPosition, n, EMPTY, static_cast<MoveFlag>(target.type), board.sideToMove});
 			}
 			if (board.enPassantSquare != -1) {
 				const int_fast8_t enPassantTarget = n - (sign * OFFSET[PAWN][0]);
-				if (enPassantTarget == board.enPassantSquare)
-					moves.push_back({pawnPosition, n, EMPTY, ENPASSANT, board.sideToMove});
+				if (enPassantTarget == board.enPassantSquare) {
+					addMove({pawnPosition, n, EMPTY, ENPASSANT, board.sideToMove});
+				}
 			}
 		}
 	}
+}
 
-	return moves;
+std::vector<Move> MoveGenerator::pseudoLegalMoves(const ChessBoard&board) {
+	MoveGenerator generator;
+	generator.board = board;
+
+	std::array<std::thread,NUM_OF_THREADS> threads;
+
+	const std::vector<Piece>* pieceList = (board.sideToMove == WHITE) ? &board.whitePieces : &board.blackPieces;
+	const std::vector<int_fast8_t>* pawnList = (board.sideToMove == WHITE) ? &board.whitePawns : &board.blackPawns;
+
+	const int pieceListLength = pieceList->size();
+	const int pawnListLength = pawnList->size();
+	const int totalLength = pieceListLength + pawnListLength;
+
+	const int tasksPerThread = std::ceil(totalLength / static_cast<float>(NUM_OF_THREADS));
+	const int numPieceThreads = std::ceil(pieceListLength / static_cast<float>(tasksPerThread));
+	const int numPawnThreads = NUM_OF_THREADS - tasksPerThread;
+
+	std::vector<std::vector<Piece>> pieceTasks;
+	for (int i = 0; i < pieceListLength; i += tasksPerThread) {
+		const int last = std::min(pieceListLength, i + tasksPerThread);
+		std::vector<Piece> vec;
+		vec.reserve(last - i);
+		move(pieceList->begin() + i, pieceList->begin() + last, back_inserter(vec));
+		pieceTasks.push_back(vec);
+	}
+
+	for (int i = 0; i < numPieceThreads; ++i) {
+		threads[i] = std::thread(&MoveGenerator::generateMovesForPieces, &generator, std::cref(pieceTasks[i]));
+	}
+
+	std::vector<std::vector<int_fast8_t>> pawnTasks;
+	for (int i = 0; i < pawnListLength; i += tasksPerThread) {
+		const int last = std::min(pawnListLength, i + tasksPerThread);
+		std::vector<int_fast8_t> vec;
+		vec.reserve(last - i);
+		move(pawnList->begin() + i, pawnList->begin() + last, back_inserter(vec));
+		pawnTasks.push_back(vec);
+	}
+
+	for (int i = numPieceThreads; i < NUM_OF_THREADS; ++i) {
+		threads[i] = std::thread(&MoveGenerator::generateMovesForPawns, &generator, std::cref(pawnTasks[i - numPieceThreads]));
+	}
+
+	for (std::thread&thread: threads) {
+		thread.join();
+	}
+
+	return generator.moves;
 }
 
 std::vector<Move> MoveGenerator::tacticalMoves(const ChessBoard&board) {

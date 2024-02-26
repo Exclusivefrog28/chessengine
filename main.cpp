@@ -194,5 +194,14 @@ int main() {
 	Interface::CLI interface;
 	interface.start();
 #endif
+
+	// ChessBoard board = ChessBoard();
+	// board.setStartingPosition();
+	// std::vector<Move> moves = MoveGenerator::pseudoLegalMoves(board);
+	//
+	// for (auto move : moves) {
+	// 	std::cout << move << "\n";
+	// }
+
 	return 0;
 }
