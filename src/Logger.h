@@ -1,8 +1,10 @@
 #ifndef LOGGER_H
 #define LOGGER_H
+#include <condition_variable>
 #include <string>
 #include <thread>
 #include <fstream>
+#include <semaphore>
 
 enum MessageType {
 	LOG = 0,
@@ -36,13 +38,13 @@ public:
 
 	void end();
 
-	void log(std::string message) const;
+	void log(const std::string& message) const;
 
-	void logToFile(std::string message) const;
+	void logToFile(const std::string& message) const;
 
-	void sendInt(std::string name, int value) const;
+	void sendInt(const std::string& name, int value) const;
 
-	void sendString(std::string name, std::string value) const;
+	void sendString(const std::string& name, const std::string& value) const;
 
 	Logger();
 
@@ -51,14 +53,18 @@ public:
 private:
 	mutable Node* head;
 	mutable Node* tail;
-	mutable std::ofstream logFile;
+	std::ofstream logFile;
 
-	void threadFunc() const;
+	void threadFunc();
 
-	bool processNode() const;
+	bool processNode();
 
 	std::thread processingThread;
-	bool stop;
+
+	mutable std::mutex m;
+	mutable std::condition_variable cv;
+	mutable bool empty{};
+	mutable bool stop;
 };
 
 #endif //LOGGER_H

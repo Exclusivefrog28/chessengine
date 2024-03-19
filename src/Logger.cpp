@@ -9,6 +9,7 @@
 
 void Logger::start() {
 	stop = false;
+	empty = true;
 	processingThread = std::thread(&Logger::threadFunc, this);
 #ifdef logtofile
 	logFile.open("log.txt");
@@ -23,26 +24,34 @@ void Logger::end() {
 #endif
 }
 
-void Logger::log(const std::string message) const {
+void Logger::log(const std::string&message) const {
 	auto* newNode = new MessageNode();
 	newNode->type = LOG;
 	newNode->msg = message;
 	tail->next = newNode;
-	tail = newNode;
+	tail = newNode; {
+		std::lock_guard lk(m);
+		empty = false;
+	}
+	cv.notify_one();
 }
 
-void Logger::logToFile(std::string message) const {
+void Logger::logToFile(const std::string&message) const {
 	// Since the function doesn't do anything with the flag disabled the compiler should technically remove it and all the calls to it
 #ifdef logtofile
 	auto* newNode = new MessageNode();
 	newNode->type = TOFILE;
 	newNode->msg = message;
 	tail->next = newNode;
-	tail = newNode;
+	tail = newNode; {
+		std::lock_guard lk(m);
+		empty = false;
+	}
+	cv.notify_one();
 #endif
 }
 
-void Logger::sendInt(const std::string name, const int value) const {
+void Logger::sendInt(const std::string&name, const int value) const {
 	// Since the function doesn't do anything with the flag disabled the compiler should technically remove it and all the calls to it
 #ifdef wasm
 	auto* newNode = new IntNode();
@@ -51,10 +60,15 @@ void Logger::sendInt(const std::string name, const int value) const {
 	newNode->value = value;
 	tail->next = newNode;
 	tail = newNode;
+	{
+		std::lock_guard lk(m);
+		empty = false;
+	}
+	cv.notify_one();
 #endif
 }
 
-void Logger::sendString(const std::string name, const std::string value) const {
+void Logger::sendString(const std::string&name, const std::string&value) const {
 	// Since the function doesn't do anything with the flag disabled the compiler should technically remove it and all the calls to it
 #ifdef wasm
 	auto* newNode = new StringNode();
@@ -63,6 +77,11 @@ void Logger::sendString(const std::string name, const std::string value) const {
 	newNode->value = value;
 	tail->next = newNode;
 	tail = newNode;
+	{
+		std::lock_guard lk(m);
+		empty = false;
+	}
+	cv.notify_one();
 #endif
 }
 
@@ -71,23 +90,29 @@ Logger::Logger() {
 	this->head = new MessageNode();
 	this->tail = this->head;
 	stop = false;
+	empty = true;
 }
 
 Logger::~Logger() {
 	delete this->head;
 }
 
-void Logger::threadFunc() const {
+void Logger::threadFunc() {
 	while (!stop) {
 		// Keep processing the buffer, wait a bit when it's empty
-		if (!processNode()) std::this_thread::sleep_for(std::chrono::milliseconds(1));
+		if (!processNode()) {
+			std::unique_lock lk(m);
+			empty = true;
+			cv.wait(lk, [this] { return !empty || stop; });
+			lk.unlock();
+		}
 	}
 	// Empty the buffer
 	while (processNode()) {
 	}
 }
 
-bool Logger::processNode() const {
+bool Logger::processNode() {
 	if (head->next != nullptr) {
 		Node* newHead = head->next;
 
