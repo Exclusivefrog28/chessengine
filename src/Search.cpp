@@ -139,13 +139,19 @@ int Search::alphaBeta(const int depth, int alpha, int beta, const int ply) {
 			continue;
 		}
 		logger.logToFile(move.toString() + " begin\n");
+		if (ply == 0) {
+			logger.sendString("moveStart", move.toString());
+		}
 
 		hasLegalMoves = true;
 
 		const int score = -alphaBeta(depth - 1, -beta, -alpha, ply + 1);
+		board.unMakeMove();
 
 		logger.logToFile(std::format("{} end score : {}\n", move.toString(), score));
-		board.unMakeMove();
+		if (ply == 0) {
+			logger.sendString("moveEnd", move.toString());
+		}
 
 		if (stop) return 0;
 
@@ -311,7 +317,7 @@ Move Search::selectMove(std::vector<ScoredMove>&moves, const int index) {
 	return selected.move;
 }
 
-void Search::storeKillerMove(const Move move, const int ply) {
+void Search::storeKillerMove(const Move&move, const int ply) {
 	if ((move.flag == 0 || move.flag >= 7) && move.promotionType == 0) {
 		if (killerMoves[ply][0] == move) return;
 		if (killerMoves[ply][1] == move) return;

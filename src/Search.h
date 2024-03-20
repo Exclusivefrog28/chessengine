@@ -54,7 +54,7 @@ private:
 
 	static Move selectMove(std::vector<ScoredMove>&moves, int index);
 
-	void storeKillerMove(Move move, int ply);
+	void storeKillerMove(const Move&move, int ply);
 
 	std::vector<Move> collectPV(int depth) const;
 };
