@@ -3,6 +3,7 @@
 
 #include <array>
 #include <algorithm>
+#include <random>
 #include "Piece.h"
 
 namespace Util {
@@ -87,6 +88,14 @@ namespace Util {
 		const int_fast8_t file = position[0] - 'a';
 		const int_fast8_t rank = 8 - (position[1] - '0');
 		return rank * 8 + file;
+	}
+
+	inline std::random_device rd;
+	inline std::mt19937 mt(rd());
+	inline std::uniform_int_distribution<int> dist(-1, 1);
+
+	static int randomOffset() {
+		return dist(mt);
 	}
 }
 #endif //CHESSENGINE_UTIL_H

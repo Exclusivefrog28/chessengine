@@ -39,10 +39,10 @@ int Evaluator::evaluate(const ChessBoard &board) {
     const int midGamePhase = (gamePhase > 24) ? 24 : gamePhase;
     const int endGamePhase = 24 - midGamePhase;
 
-    return (midGameScore * midGamePhase + endGameScore * endGamePhase) / 24;
+    return ((midGameScore * midGamePhase + endGameScore * endGamePhase) / 24) + Util::randomOffset();
 }
 
-int_fast8_t Evaluator::flipPosition(int_fast8_t pos) {
+int_fast8_t Evaluator::flipPosition(const int_fast8_t pos) {
     const int_fast8_t file = pos % 8;
     const int_fast8_t rank = pos / 8;
 

@@ -106,7 +106,7 @@ int Search::alphaBeta(const int depth, int alpha, int beta, const int ply) {
 		//repetitions
 		if (board.isDraw()) {
 			logger.logToFile("draw, score: 0\n");
-			return 0;
+			return Util::randomOffset();
 		}
 
 		alpha = std::max(alpha, -MATE_SCORE + ply);
@@ -190,7 +190,7 @@ int Search::quiesce(int alpha, int beta, const int ply, const int depth) {
 	if (stop) return 0;
 
 	//repetitions
-	if (board.isDraw()) return 0;
+	if (board.isDraw()) return Util::randomOffset();
 
 	const int stand_pat = Evaluator::evaluate(board);
 	if (stand_pat >= beta)
