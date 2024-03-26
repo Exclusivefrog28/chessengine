@@ -77,9 +77,5 @@ void TranspositionTable::clear() {
 	resetCounters();
 	for (Entry&entry: entries) {
 		entry.nodeType = EMPTY;
-		entry.depth = 0;
-		entry.score = 0;
-		entry.key = 0;
-		entry.bestMove = NULL_MOVE;
 	}
 }
