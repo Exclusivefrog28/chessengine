@@ -40,6 +40,10 @@ namespace Moves {
 			if (promotionType != Pieces::EMPTY) str += Util::pieceToString(promotionType, Color::BLACK);
 			return str;
 		}
+
+		bool tactical() const {
+				return (flag > 0 && flag < 7) || promotionType != Pieces::EMPTY;
+		}
 	};
 
 	inline std::ostream& operator<<(std::ostream&os, const Move&move) {

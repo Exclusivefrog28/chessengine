@@ -114,7 +114,7 @@ int Search::alphaBeta(const int depth, int alpha, int beta, const int ply) {
 		if (alpha >= beta) return alpha;
 	}
 
-	if (depth == 0) return quiesce(alpha, beta, ply, 0);
+	if (depth < 1) return quiesce(alpha, beta, ply, 0);
 
 	Move hashMove = NULL_MOVE;
 	int positionScore = 0;
@@ -139,19 +139,23 @@ int Search::alphaBeta(const int depth, int alpha, int beta, const int ply) {
 			continue;
 		}
 		logger.logToFile(move.toString() + " begin\n");
-		if (ply == 0) {
-			logger.sendString("moveStart", move.toString());
-		}
 
 		hasLegalMoves = true;
 
-		const int score = -alphaBeta(depth - 1, -beta, -alpha, ply + 1);
+		int score = 0;
+
+		// late move reductions
+		bool shouldFullSearch = true;
+		if (i > 2 && depth > 3 && !move.tactical()) {
+			score = -alphaBeta(depth - 2, -alpha - 1, -alpha, ply + 1);
+
+			shouldFullSearch = score > alpha;
+		}
+
+		if (shouldFullSearch) score = -alphaBeta(depth - 1, -beta, -alpha, ply + 1);
 		board.unMakeMove();
 
 		logger.logToFile(std::format("{} end score : {}\n", move.toString(), score));
-		if (ply == 0) {
-			logger.sendString("moveEnd", move.toString());
-		}
 
 		if (stop) return 0;
 
