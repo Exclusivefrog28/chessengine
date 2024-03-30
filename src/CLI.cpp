@@ -11,6 +11,7 @@ namespace Interface {
 	void CLI::start() {
 		board = ChessBoard();
 		Instruction currentInstruction;
+		currentInstruction.command = invalid;
 		while (currentInstruction.command != quit) {
 			std::string input;
 			std::getline(std::cin, input);

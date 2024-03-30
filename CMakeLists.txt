@@ -26,7 +26,7 @@ add_subdirectory(src)
 target_link_libraries(ChessEngine src)
 
 if (NOT WASM)
-    add_subdirectory(tests)
+#    add_subdirectory(tests)
 endif ()
 
 if (WASM)

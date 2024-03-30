@@ -174,27 +174,27 @@ std::vector<Move> MoveGenerator::tacticalMoves(const ChessBoard&board) {
 }
 
 
-bool MoveGenerator::isSquareAttacked(const ChessBoard&board, int_fast8_t square, Color color) {
+bool MoveGenerator::isSquareAttacked(const ChessBoard&board, const int_fast8_t square, const Color color) {
 	const int_fast8_t sign = (color == WHITE) ? -1 : 1;
 
 	//PAWNS
 	for (int i = 1; i < 3; ++i) {
 		const int_fast8_t n = MAILBOX[MAILBOX64[square] + (sign * OFFSET[PAWN][i])];
 		if (n != -1) {
-			if (board.squares[n].color != color && board.squares[n].type == PAWN) return true;
+			if (board.squares[n].type == PAWN && board.squares[n].color != color) return true;
 		}
 	}
 	//KNIGHTS
 	for (int i = 0; i < OFFSETS[KNIGHT]; ++i) {
 		const int_fast8_t n = MAILBOX[MAILBOX64[square] + OFFSET[KNIGHT][i]];
 		if (n != -1) {
-			if (board.squares[n].color != color && board.squares[n].type == KNIGHT) return true;
+			if (board.squares[n].type == KNIGHT && board.squares[n].color != color) return true;
 		}
 	}
 	//REST
 	for (int i = 0; i < OFFSETS[QUEEN]; ++i) {
 		int_fast8_t n = square;
-		int_fast8_t offset = OFFSET[QUEEN][i];
+		const int_fast8_t offset = OFFSET[QUEEN][i];
 		bool sliding = false;
 		while (true) {
 			n = MAILBOX[MAILBOX64[n] + offset];
@@ -203,9 +203,9 @@ bool MoveGenerator::isSquareAttacked(const ChessBoard&board, int_fast8_t square,
 			if (target.type != EMPTY) {
 				if (target.color != color && (SLIDE[target.type] || !sliding) && target.type != PAWN &&
 				    target.type != KNIGHT) {
-					const int_fast8_t* offsetPtr = std::find(OFFSET[target.type], OFFSET[target.type] + OFFSETS[target.type],
-					                                         offset);
-					if (offsetPtr != OFFSET[target.type] + OFFSETS[target.type]) return true;
+					if (target.type == QUEEN || target.type == KING) return true;
+					if (i % 2 == 0) {if (target.type == BISHOP) return true;}
+					else {if (target.type == ROOK) return true;}
 				}
 				break;
 			}
@@ -232,10 +232,6 @@ unsigned long long MoveGenerator::perft(int depth, ChessBoard&board) {
 		board.makeMove(move);
 		if (!inCheck(board, invertColor(board.sideToMove))) {
 			const unsigned long long childNodes = perft(depth - 1, board);
-			//            if(depth == 6){
-			//                printf("Move: %s-%s %d\n", Util::positionToString(move.start).c_str(), Util::positionToString(move.end).c_str(), move.flag);
-			//                printf("Nodes: %llu\n", childNodes);
-			//            }
 			nodes += childNodes;
 		}
 		board.unMakeMove();

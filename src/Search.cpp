@@ -148,7 +148,6 @@ int Search::alphaBeta(const int depth, int alpha, int beta, const int ply) {
 		bool shouldFullSearch = true;
 		if (i > 2 && depth > 3 && !move.tactical()) {
 			score = -alphaBeta(depth - 2, -alpha - 1, -alpha, ply + 1);
-
 			shouldFullSearch = score > alpha;
 		}
 
