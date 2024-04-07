@@ -38,6 +38,17 @@ char* move(const int start, const int end, int flag, int promotionType, int play
 }
 
 EMSCRIPTEN_KEEPALIVE
+char* parseandmove(const char* movestring){
+    Move move = Interface::CLI::parseMove(movestring, board);
+    board.makeMove(move);
+    const std::string fen = board.fen();
+    const int length = fen.length();
+    char* chararray = new char[length + 1];
+    strcpy(chararray, fen.c_str());
+    return chararray;
+}
+
+EMSCRIPTEN_KEEPALIVE
 char* unmove() {
 	board.unMakeMove();
 
