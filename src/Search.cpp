@@ -74,8 +74,8 @@ Move Search::search(ChessBoard&board, const int timeAllowed) {
 
 	if (search.lastPV.empty()) {
 		auto entry = tt.getEntry(board.hashCode, 0);
-		std::cout << "problem HASH: " << board.hashCode << " TT: key- " << entry.key << ", move- " << entry.bestMove << ", type- " << entry.nodeType <<
-				", depth- " << entry.depth << ", score- " << entry.score << std::endl;
+		std::cout << "problem HASH: " << board.hashCode << " TT: key- " << entry.key << ", move- " << entry.bestMove << ", type- " << entry.nodeType() <<
+				", depth- " << entry.depth() << ", score- " << entry.score() << std::endl;
 		return NULL_MOVE;
 	}
 
@@ -348,14 +348,14 @@ std::vector<Move> Search::collectPV(const int depth) const {
 	int pvDepth = 0;
 	while (tt.contains(board.hashCode)) {
 		const TranspositionTable::Entry entry = tt.getEntry(board.hashCode, 0);
-		if (entry.nodeType != TranspositionTable::EXACT) break;
+		if (entry.nodeType() != TranspositionTable::EXACT) break;
 		Move move = entry.bestMove;
 
 		if (pvPositions.contains(board.hashCode)) {
 			std::cout << "Cycle in PV!" << std::endl;
 			board.makeMove(move);
 			pv.push_back(move);
-			scores.push_back(entry.score);
+			scores.push_back(entry.score());
 			pvDepth++;
 			break;
 		}
@@ -381,7 +381,7 @@ std::vector<Move> Search::collectPV(const int depth) const {
 		pvPositions.insert(board.hashCode);
 		board.makeMove(move);
 		pv.push_back(move);
-		scores.push_back(entry.score);
+		scores.push_back(entry.score());
 		pvDepth++;
 	}
 	std::string pvString;
@@ -404,20 +404,20 @@ std::vector<Move> Search::collectPV(const int depth) const {
 bool Search::getTransposition(const uint64_t hash, const int depth, const int ply, int&score, const int&alpha, const int&beta, Move&hashMove) {
 	if (tt.contains(hash)) {
 		const TranspositionTable::Entry entry = tt.getEntry(hash, ply);
-		if (entry.depth >= depth) {
-			switch (entry.nodeType) {
+		if (entry.depth() >= depth) {
+			switch (entry.nodeType()) {
 				case TranspositionTable::EXACT:
-					score = entry.score;
+					score = entry.score();
 					return true;
 				case TranspositionTable::UPPERBOUND:
-					if (entry.score <= alpha) {
-						score = entry.score;
+					if (entry.score() <= alpha) {
+						score = entry.score();
 						return true;
 					}
 					break;
 				case TranspositionTable::LOWERBOUND:
-					if (entry.score >= beta) {
-						score = entry.score;
+					if (entry.score() >= beta) {
+						score = entry.score();
 						return true;
 					}
 				default: break;

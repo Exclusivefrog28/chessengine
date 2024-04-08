@@ -201,6 +201,7 @@ int runPerft(int depth, const char* fen) {
 #endif
 
 int main() {
+
 #ifndef wasm
 	Interface::CLI interface;
 	interface.start();
