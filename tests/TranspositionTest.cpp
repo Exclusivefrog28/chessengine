@@ -4,7 +4,7 @@
 #include "TranspositionTable.h"
 #include "catch2/internal/catch_windows_h_proxy.hpp"
 
-#define MATE_SCORE 32768 // 1 << 15
+#define MATE_SCORE INT32_MAX
 
 auto tt = TranspositionTable();
 
@@ -12,7 +12,7 @@ TEST_CASE("TT - rw", "[TranspositionTests]") {
 	ChessBoard board;
 	board.setPosition("8/RP1qb1B1/2p2P2/6n1/P7/p3k3/Q3b1BK/6R1 w - - 0 1");
 	tt.setEntry(board, Interface::CLI::parseMove("f6e7", board), 1, 1, TranspositionTable::EXACT, 1);
-	auto readEntry = tt.getEntry(board.hashCode, 1);
+	const auto readEntry = tt.getEntry(board.hashCode, 1);
 	CHECK(readEntry.bestMove == Interface::CLI::parseMove("f6e7", board));
 	CHECK(readEntry.depth == 1);
 	CHECK(readEntry.score == 1);

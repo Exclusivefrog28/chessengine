@@ -23,11 +23,11 @@ namespace Moves {
 	};
 
 	struct Move {
-		int_fast8_t start;
-		int_fast8_t end;
-		Type promotionType;
-		MoveFlag flag;
-		Color player;
+		int8_t start : 8;
+		int8_t end : 8;
+		Type promotionType : 4;
+		MoveFlag flag : 4;
+		Color player : 1;
 
 		bool operator==(const Move&other) const {
 			return (start == other.start && end == other.end && promotionType == other.promotionType &&
@@ -54,7 +54,7 @@ namespace Moves {
 
 	constexpr Move NULL_MOVE = Move{0, 0, Pieces::EMPTY, QUIET, Color::WHITE};
 
-	constexpr int_fast8_t MAILBOX[120] = {
+	constexpr int8_t MAILBOX[120] = {
 		-1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
 		-1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
 		-1, 0, 1, 2, 3, 4, 5, 6, 7, -1,
@@ -69,7 +69,7 @@ namespace Moves {
 		-1, -1, -1, -1, -1, -1, -1, -1, -1, -1
 	};
 
-	constexpr int_fast8_t MAILBOX64[64] = {
+	constexpr int8_t MAILBOX64[64] = {
 		21, 22, 23, 24, 25, 26, 27, 28,
 		31, 32, 33, 34, 35, 36, 37, 38,
 		41, 42, 43, 44, 45, 46, 47, 48,
@@ -81,8 +81,8 @@ namespace Moves {
 	};
 
 	constexpr bool SLIDE[7] = {false, false, false, true, true, true, false};
-	constexpr int_fast8_t OFFSETS[7] = {0, 4, 8, 4, 4, 8, 8};
-	constexpr int_fast8_t OFFSET[7][8] = {
+	constexpr int8_t OFFSETS[7] = {0, 4, 8, 4, 4, 8, 8};
+	constexpr int8_t OFFSET[7][8] = {
 		{0, 0, 0, 0, 0, 0, 0, 0},
 		{8, 9, 11, 16, 0, 0, 0, 0},
 		{-21, -19, -12, -8, 8, 12, 19, 21},

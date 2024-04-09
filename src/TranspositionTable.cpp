@@ -1,18 +1,19 @@
 #include "TranspositionTable.h"
 #include <cmath>
+#include <cstdio>
 
 #include "MoveGenerator.h"
 
-#define MATE_SCORE 32768 // 1 << 15
-#define MIN_MATE_SCORE 16384 // 1 << 14
+#define MATE_SCORE INT32_MAX
+#define MIN_MATE_SCORE (INT32_MAX - 1024)
 
 TranspositionTable::Entry TranspositionTable::getEntry(const uint64_t key, const int ply) {
 	const int index = key % TT_SIZE;
 	Entry entry = entries[index];
 
-	if (abs(entry.score()) >= MIN_MATE_SCORE) {
-		const int sign = entry.score() > 0 ? 1 : -1;
-		entry.setScore(sign * (abs(entry.score()) - ply));
+	if (abs(entry.score) >= MIN_MATE_SCORE) {
+		const int sign = entry.score > 0 ? 1 : -1;
+		entry.score = sign * (abs(entry.score) - ply);
 	}
 	reads++;
 
@@ -21,7 +22,7 @@ TranspositionTable::Entry TranspositionTable::getEntry(const uint64_t key, const
 
 bool TranspositionTable::contains(const uint64_t key) {
 	const int index = key % TT_SIZE;
-	const bool exists = entries[index].nodeType() != EMPTY;
+	const bool exists = entries[index].nodeType != EMPTY;
 	const bool sameKey = (entries[index].key == key);
 	if (exists && !sameKey) collisions++;
 
@@ -36,9 +37,9 @@ void TranspositionTable::setEntry(const ChessBoard&board, const Move bestMove, c
 		score = sign * (abs(score) + ply);
 	}
 
-	const NodeType savedType = entries[index].nodeType();
+	const NodeType savedType = entries[index].nodeType;
 
-	const Entry entry = Entry(board.hashCode, bestMove, depth, score, nodeType);
+	const Entry entry = {board.hashCode, bestMove, score, static_cast<uint8_t>(depth), nodeType};
 
 	//REPLACEMENT SCHEME
 	// 1. Prefer EXACT nodes to bounds
@@ -46,7 +47,7 @@ void TranspositionTable::setEntry(const ChessBoard&board, const Move bestMove, c
 
 	if (savedType != EMPTY) {
 		if ((savedType != EXACT && nodeType != EXACT) || (savedType == EXACT && nodeType == EXACT)) {
-			if (entries[index].depth() <= depth) write(index, entry);
+			if (entries[index].depth <= depth) write(index, entry);
 		}
 		else if (savedType != EXACT) write(index, entry);
 	}
@@ -67,7 +68,7 @@ void TranspositionTable::resetCounters() {
 int TranspositionTable::occupancy() const {
 	int occupied = 0;
 	for (int i = 0; i < TT_SIZE; i++) {
-		if (entries[i].nodeType() != EMPTY) occupied++;
+		if (entries[i].nodeType != EMPTY) occupied++;
 	}
 	return occupied;
 }
@@ -75,8 +76,6 @@ int TranspositionTable::occupancy() const {
 void TranspositionTable::clear() {
 	resetCounters();
 	for (Entry&entry: entries) {
-		entry.setNodeType(EMPTY);
+		entry.nodeType = EMPTY;
 	}
 }
-
-TranspositionTable::TranspositionTable()= default;
