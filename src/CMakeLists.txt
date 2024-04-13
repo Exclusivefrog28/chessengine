@@ -13,6 +13,7 @@ set(HEADER_FILES
         TranspositionTable.h
         Util.h
         Logger.h
+        MoveParser.h
 )
 
 set(SOURCE_FILES

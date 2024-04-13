@@ -21,6 +21,7 @@ EMSCRIPTEN_KEEPALIVE
 void init() {
 	board.hashCodes.initialize();
 	board.setStartingPosition();
+    Search::tt.loadOpenings(board);
 }
 
 EMSCRIPTEN_KEEPALIVE
