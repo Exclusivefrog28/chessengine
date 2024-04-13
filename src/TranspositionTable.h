@@ -33,6 +33,8 @@ public:
 
     void setEntry(const ChessBoard &board, Move bestMove, int depth, int score, NodeType nodeType, int ply);
 
+    static bool isMateScore(int32_t score) ;
+
     int reads;
     int writes;
     int collisions;

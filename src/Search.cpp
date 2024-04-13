@@ -32,7 +32,6 @@ Move Search::search(ChessBoard &board, const int timeAllowed) {
 
         const auto timeAvailable = start + timeOut - std::chrono::steady_clock::now();
 
-
         if (search.cv.wait_for(lk, timeAvailable, [&] { return search.finished; })) {
             thread.join();
         } else {
@@ -41,7 +40,12 @@ Move Search::search(ChessBoard &board, const int timeAllowed) {
             break;
         }
 
-        search.lastPV = search.collectPV(i);
+        bool endEarly = false;
+
+        search.lastPV = search.collectPV(i, endEarly);
+
+        if (endEarly) break;
+
         if (search.lastPV.size() > i) {
             i = search.lastPV.size();
         }
@@ -334,7 +338,7 @@ void Search::storeKillerMove(const Move &move, const int ply) {
 Search::Search(ChessBoard &board) : board(board) {
 }
 
-std::vector<Move> Search::collectPV(const int depth) const {
+std::vector<Move> Search::collectPV(const int depth, bool &endEarly) const {
     std::vector<Move> pv;
     std::unordered_set<uint64_t> pvPositions;
     std::vector<int> scores;
@@ -348,14 +352,8 @@ std::vector<Move> Search::collectPV(const int depth) const {
             break;
         Move move = entry.bestMove;
 
-        if (pvPositions.contains(board.hashCode)) {
-            std::cout << "Cycle in PV!" << std::endl;
-            board.makeMove(move);
-            pv.push_back(move);
-            scores.push_back(entry.score);
-            pvDepth++;
-            break;
-        }
+        if (TranspositionTable::isMateScore(entry.score) || entry.nodeType == TranspositionTable::BOOK)
+            endEarly = true;
 #ifdef DEBUG
         auto moves = MoveGenerator::pseudoLegalMoves(board);
         if (moves.empty()) break;
@@ -374,12 +372,16 @@ std::vector<Move> Search::collectPV(const int depth) const {
             break;
         }
 #endif
-
         pvPositions.insert(board.hashCode);
         board.makeMove(move);
         pv.push_back(move);
         scores.push_back(entry.score);
         pvDepth++;
+
+        if (pvPositions.contains(board.hashCode)) {
+            std::cout << "Cycle in PV!" << std::endl;
+            break;
+        }
     }
     std::string pvString;
     std::string pvStringWithScores = "info PV: ";
@@ -397,6 +399,12 @@ std::vector<Move> Search::collectPV(const int depth) const {
 
     return pv;
 }
+
+std::vector<Move> Search::collectPV(int depth) const {
+    bool unused = false;
+    return collectPV(depth, unused);
+}
+
 
 bool Search::getTransposition(const uint64_t hash, const int depth, const int ply, int &score, const int &alpha,
                               const int &beta, Move &hashMove) {

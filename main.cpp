@@ -6,6 +6,7 @@
 #include "MoveGenerator.h"
 #include "Evaluator.h"
 #include "Search.h"
+#include "MoveParser.h"
 #include <cstring>
 #include <string>
 
@@ -40,7 +41,7 @@ char* move(const int start, const int end, int flag, int promotionType, int play
 
 EMSCRIPTEN_KEEPALIVE
 char* parseandmove(const char* movestring){
-    Move move = Interface::CLI::parseMove(movestring, board);
+    Move move = parseMove(movestring, board);
     board.makeMove(move);
     const std::string fen = board.fen();
     const int length = fen.length();

@@ -4,7 +4,7 @@
 #include "Move.h"
 #include "ChessBoard.h"
 
-Move parseMove(const std::string&string, const ChessBoard&board) {
+static Move parseMove(const std::string&string, const ChessBoard&board) {
     const int startPos = Util::stringToPosition(string.substr(0, 2));
     const int endPos = Util::stringToPosition(string.substr(2, 2));
     Type promotionType = EMPTY;

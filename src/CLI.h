@@ -40,8 +40,6 @@ namespace Interface {
 	public:
 		void start();
 
-		static Move parseMove(const std::string&string, const ChessBoard&board);
-
 	private:
 		ChessBoard board;
 

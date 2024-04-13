@@ -56,7 +56,8 @@ private:
 
 	void storeKillerMove(const Move&move, int ply);
 
-	std::vector<Move> collectPV(int depth) const;
+    std::vector<Move> collectPV(int depth) const;
+	std::vector<Move> collectPV(int depth, bool& endEarly) const;
 };
 
 #endif

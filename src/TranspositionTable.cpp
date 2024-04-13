@@ -11,7 +11,7 @@ TranspositionTable::Entry TranspositionTable::getEntry(const uint64_t key, const
     const int index = key % TT_SIZE;
     Entry entry = entries[index];
 
-    if (abs(entry.score) >= MIN_MATE_SCORE) {
+    if (isMateScore(entry.score)) {
         const int sign = entry.score > 0 ? 1 : -1;
         entry.score = sign * (abs(entry.score) - ply);
     }
@@ -33,7 +33,7 @@ void TranspositionTable::setEntry(const ChessBoard &board, const Move bestMove, 
                                   const NodeType nodeType, const int ply) {
     const int index = board.hashCode % TT_SIZE;
 
-    if (abs(score) >= MIN_MATE_SCORE) {
+    if (isMateScore(score)) {
         const int sign = score > 0 ? 1 : -1;
         score = sign * (abs(score) + ply);
     }
@@ -105,4 +105,8 @@ void TranspositionTable::loadOpenings(ChessBoard &board) {
     }
 
     file.close();
+}
+
+bool TranspositionTable::isMateScore(int32_t score) {
+    return abs(score) >= MIN_MATE_SCORE;
 }

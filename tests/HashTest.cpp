@@ -1,6 +1,7 @@
 #include <catch2/catch_test_macros.hpp>
 
-#include "CLI.h"
+#include "ChessBoard.h"
+#include "MoveParser.h"
 
 TEST_CASE("HASH - Initial Code", "[HashTests]") {
 	ChessBoard board = ChessBoard();
@@ -19,7 +20,7 @@ TEST_CASE("HASH - Capturing a piece", "[HashTests]") {
 	const HashCodes codes = board.hashCodes;
 	board.setPosition("4k3/8/8/3p4/4P3/8/8/4K3 w - - 0 1");
 	const uint64_t originalCode = board.hashCode;
-	board.makeMove(Interface::CLI::parseMove("e4d5", board));
+	board.makeMove(parseMove("e4d5", board));
 	const uint64_t targetCode = originalCode
 	                            ^ codes.pieceCode(PAWN, WHITE, 36)
 	                            ^ codes.pieceCode(PAWN, BLACK, 27)
@@ -33,7 +34,7 @@ TEST_CASE("HASH - Losing one castling right", "[HashTests]") {
 	const HashCodes codes = board.hashCodes;
 	board.setPosition("4k3/8/8/3p4/4P3/8/8/R3K2R w KQ - 0 1");
 	const uint64_t originalCode = board.hashCode;
-	board.makeMove(Interface::CLI::parseMove("h1h2", board));
+	board.makeMove(parseMove("h1h2", board));
 	const uint64_t targetCode = originalCode
 	                            ^ codes.pieceCode(ROOK, WHITE, 63)
 	                            ^ codes.pieceCode(ROOK, WHITE, 55)
@@ -48,7 +49,7 @@ TEST_CASE("HASH - Losing two castling rights", "[HashTests]") {
 	const HashCodes codes = board.hashCodes;
 	board.setPosition("4k3/8/8/3p4/4P3/8/8/R3K2R w KQ - 0 1");
 	const uint64_t originalCode = board.hashCode;
-	board.makeMove(Interface::CLI::parseMove("e1e2", board));
+	board.makeMove(parseMove("e1e2", board));
 	const uint64_t targetCode = originalCode
 	                            ^ codes.pieceCode(KING, WHITE, 60)
 	                            ^ codes.pieceCode(KING, WHITE, 52)
@@ -63,7 +64,7 @@ TEST_CASE("HASH - En passant", "[HashTests]") {
 	const HashCodes codes = board.hashCodes;
 	board.setPosition("4k3/3p4/8/8/8/8/4P3/4K3 w - - 0 1");
 	uint64_t originalCode = board.hashCode;
-	board.makeMove(Interface::CLI::parseMove("e2e4", board));
+	board.makeMove(parseMove("e2e4", board));
 	uint64_t targetCode = originalCode
 	                      ^ codes.pieceCode(PAWN, WHITE, 52)
 	                      ^ codes.pieceCode(PAWN, WHITE, 36)
@@ -71,7 +72,7 @@ TEST_CASE("HASH - En passant", "[HashTests]") {
 	                      ^ codes.enPassantFileCode[4];
 	CHECK(board.hashCode == targetCode);
 	originalCode = board.hashCode;
-	board.makeMove(Interface::CLI::parseMove("d7d6", board));
+	board.makeMove(parseMove("d7d6", board));
 	targetCode = originalCode
 	             ^ codes.pieceCode(PAWN, BLACK, 11)
 	             ^ codes.pieceCode(PAWN, BLACK, 19)
