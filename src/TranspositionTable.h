@@ -23,7 +23,7 @@ public:
         uint64_t key: 64;
         Move bestMove;
         int32_t score: 32;
-        uint8_t depth: 8;
+        int8_t depth: 8;
         NodeType nodeType: 3;
     };
 

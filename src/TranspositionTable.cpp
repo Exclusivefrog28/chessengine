@@ -40,7 +40,7 @@ void TranspositionTable::setEntry(const ChessBoard &board, const Move bestMove, 
 
     const NodeType savedType = entries[index].nodeType;
 
-    const Entry entry = {board.hashCode, bestMove, score, static_cast<uint8_t>(depth), nodeType};
+    const Entry entry = {board.hashCode, bestMove, score, static_cast<int8_t>(depth), nodeType};
 
     //REPLACEMENT SCHEME
     // 1. Prefer EXACT nodes to bounds
