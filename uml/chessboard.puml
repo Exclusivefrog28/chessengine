@@ -8,26 +8,33 @@ class ChessBoard {
 	+sideToMove : Color
 	+fullMoveClock : int
 	+halfMoveClock : int
-	+enPassantSquare : short
+	+enPassantSquare : int
 	+castlingRights : CastlingRights
 
     +squares : std::array<Square, 64>
 	+whitePieces : std::vector<Piece>
 	+blackPieces : std::vector<Piece>
-	+whitePawns : std::vector<short>
-	+blackPawns : std::vector<short>
-	+whiteKing : short
-	+blackKing : short
+	+whitePawns : std::vector<int>
+	+blackPawns : std::vector<int>
+	+whiteKing : int
+	+blackKing : int
 
 	+moveHistory : std::vector<Move>
-	+enPassantHistory : std::vector<short>
+	+enPassantHistory : std::vector<int>
     +castlingRightHistory : std::vector<CastlingRights>
+    +halfMoveClockHistory : std::vector<int>
+    +positionHistory : std::vector<long>
+    +irreversibleIndices : std::vector<int>
+
+    +hashCode : long
+    +hashCodes : HashCodes
 
 	+makeMove(const Move& move) : void
 	+unMakeMove() : void
-	-movePiece(short start, short end) : void
-	-removePiece(short position) : void
-	-setPiece(short position, const Square& piece) : void
+	+isDraw() : bool
+	-movePiece(int start, int end) : void
+	-removePiece(int position) : void
+	-setPiece(int position, const Square& piece) : void
 	-updateCastlingRights(const Move& move) : void
 
 	+setPosition(std::string fen) : void

@@ -13,7 +13,7 @@
 class TranspositionTable {
 public:
     enum NodeType {
-        EMPTY = 0,
+        FREE = 0,
         EXACT = 1,
         LOWERBOUND = 2,
         UPPERBOUND = 3,

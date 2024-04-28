@@ -5,6 +5,7 @@ skinparam backgroundcolor transparent
 /' Objects '/
 
 namespace Moves {
+left to right direction
 	enum MoveFlag {
 		QUIET = 0
                 CAPTUREPAWN = 1
@@ -22,8 +23,8 @@ namespace Moves {
 		+player : Color
 		+flag : MoveFlag
 		+promotionType : Type
-		+end : short
-		+start : short
+		+end : int
+		+start : int
 	}
 }
 

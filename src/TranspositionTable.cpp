@@ -22,7 +22,7 @@ TranspositionTable::Entry TranspositionTable::getEntry(const uint64_t key, const
 
 bool TranspositionTable::contains(const uint64_t key) {
     const int index = key % TT_SIZE;
-    const bool exists = entries[index].nodeType != EMPTY;
+    const bool exists = entries[index].nodeType != FREE;
     const bool sameKey = (entries[index].key == key);
     if (exists && !sameKey) collisions++;
 
@@ -46,7 +46,7 @@ void TranspositionTable::setEntry(const ChessBoard &board, const Move bestMove, 
     // 1. Prefer EXACT nodes to bounds
     // 2. Prefer deeper nodes to shallower
 
-    if (savedType != EMPTY && savedType != BOOK) {
+    if (savedType != FREE && savedType != BOOK) {
         if ((savedType != EXACT && nodeType != EXACT) || (savedType == EXACT && nodeType == EXACT)) {
             if (entries[index].depth <= depth) write(index, entry);
         } else if (savedType != EXACT) write(index, entry);
@@ -67,7 +67,7 @@ void TranspositionTable::resetCounters() {
 int TranspositionTable::occupancy() const {
     int occupied = 0;
     for (int i = 0; i < TT_SIZE; i++) {
-        if (entries[i].nodeType != EMPTY) occupied++;
+        if (entries[i].nodeType != FREE) occupied++;
     }
     return occupied;
 }
@@ -75,7 +75,7 @@ int TranspositionTable::occupancy() const {
 void TranspositionTable::clear() {
     resetCounters();
     for (Entry &entry: entries) {
-        entry.nodeType = EMPTY;
+        entry.nodeType = FREE;
     }
 }
 

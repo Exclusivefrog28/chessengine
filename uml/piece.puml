@@ -22,7 +22,7 @@ namespace Pieces {
 
 	class Piece {
 		+type : Type
-		+position : short
+		+position : int
 	}
 
 	class Square {
