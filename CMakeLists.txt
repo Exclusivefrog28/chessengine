@@ -34,7 +34,7 @@ if (WASM)
             COMPILE_FLAGS "-pthread"
     )
     set_target_properties(ChessEngine PROPERTIES
-            LINK_FLAGS "-s WASM=1 -O3 --closure 1 -s MODULARIZE -s EXPORT_ES6=1 -s EXPORT_NAME=Engine -s ENVIRONMENT=web,worker -pthread -s PTHREAD_POOL_SIZE=8 --embed-file ../assets@/ -s INITIAL_MEMORY=512MB -s EXPORTED_FUNCTIONS=['_main','_init','_move','_parseandmove','_unmove','_listPieces','_getMoves','_getAttacks','_setFen','_runPerft','_eval','_getBestMove'] -s EXPORTED_RUNTIME_METHODS=['ccall','cwrap']"
+            LINK_FLAGS "-O3 --closure 1 -s MODULARIZE -s EXPORT_ES6=1 -s EXPORT_NAME=Engine -s ENVIRONMENT=web,worker -pthread -s PTHREAD_POOL_SIZE=8 --embed-file ../assets@/ -s INITIAL_MEMORY=512MB -s EXPORTED_FUNCTIONS=['_main','_init','_move','_parseandmove','_unmove','_listPieces','_getMoves','_getAttacks','_setFen','_runPerft','_eval','_getBestMove'] -s EXPORTED_RUNTIME_METHODS=['ccall','cwrap']"
             COMPILE_FLAGS "-pthread"
     )
     #-s ENVIRONMENT=web / -s ENVIRONMENT=node
