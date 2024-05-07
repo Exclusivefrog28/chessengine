@@ -10,7 +10,7 @@ public:
     static std::vector<Move> tacticalMoves(const ChessBoard& board);
     static bool isSquareAttacked(const ChessBoard& board, int_fast8_t square, Color color);
     static bool inCheck(const ChessBoard& board, Color color);
-    static unsigned long long perft(int depth,  ChessBoard& board);
+    static uint64_t perft(int depth,  ChessBoard& board);
     static bool isLegalMove(ChessBoard &board, Move move);
 };
 

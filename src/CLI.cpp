@@ -89,7 +89,7 @@ namespace Interface {
                     } else if (arg == "perft") {
                         const uint64_t hashBefore = board.hashCode;
                         const int depth = std::stoi(instr.args[1]);
-                        const unsigned long long nodes = MoveGenerator::perft(depth, board);
+                        const uint64_t nodes = MoveGenerator::perft(depth, board);
                         std::cout << nodes << std::endl;
                         if (board.hashCode != hashBefore) {
                             std::cout << "Hash mismatch" << std::endl;

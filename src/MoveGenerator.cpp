@@ -222,16 +222,16 @@ bool MoveGenerator::inCheck(const ChessBoard&board, Color color) {
 	return isSquareAttacked(board, kingPosition, color);
 }
 
-unsigned long long MoveGenerator::perft(int depth, ChessBoard&board) {
+uint64_t MoveGenerator::perft(int depth, ChessBoard&board) {
 	if (depth == 0) return 1ULL;
-	unsigned long long nodes = 0ULL;
+    uint64_t nodes = 0ULL;
 
 	const std::vector<Move> moves = pseudoLegalMoves(board);
 
 	for (const Move move: moves) {
 		board.makeMove(move);
 		if (!inCheck(board, invertColor(board.sideToMove))) {
-			const unsigned long long childNodes = perft(depth - 1, board);
+			const uint64_t childNodes = perft(depth - 1, board);
 			nodes += childNodes;
 		}
 		board.unMakeMove();
