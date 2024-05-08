@@ -17,62 +17,68 @@ Move Search::search(ChessBoard &board, const int timeAllowed) {
     search.logger.logToFile("starting search\n");
 
     const auto timeOut = std::chrono::milliseconds(timeAllowed);
-
     const auto start = std::chrono::steady_clock::now();
+
     int i = 1;
-    for (; i < 64; ++i) {
-        search.logger.log(std::format("info searching depth {}\n", i));
-        search.logger.logToFile(std::format("starting depth {}\n", i));
+    try {
+        for (; i < 64; ++i) {
+            search.logger.log(std::format("info searching depth {}\n", i));
+            search.logger.logToFile(std::format("starting depth {}\n", i));
 
-        std::thread thread(&Search::threadedSearch, &search, i);
+            std::thread thread(&Search::threadedSearch, &search, i);
 
-        std::unique_lock<std::mutex> lk(search.cv_m);
-        search.stop = false;
-        search.finished = false;
+            std::unique_lock<std::mutex> lk(search.cv_m);
+            search.stop = false;
+            search.finished = false;
 
-        const auto timeAvailable = start + timeOut - std::chrono::steady_clock::now();
+            const auto timeAvailable = start + timeOut - std::chrono::steady_clock::now();
 
-        if (search.cv.wait_for(lk, timeAvailable, [&] { return search.finished; })) {
-            thread.join();
-        } else {
-            search.stop = true;
-            thread.join();
-            break;
+            if (search.cv.wait_for(lk, timeAvailable, [&] { return search.finished; })) {
+                thread.join();
+            } else {
+                search.stop = true;
+                thread.join();
+                break;
+            }
+
+            bool endEarly = false;
+
+            search.lastPV = search.collectPV(i, endEarly);
+
+            if (endEarly) break;
+
+            if (search.lastPV.size() > i) {
+                i = search.lastPV.size();
+            }
         }
-
-        bool endEarly = false;
-
-        search.lastPV = search.collectPV(i, endEarly);
-
-        if (endEarly) break;
-
-        if (search.lastPV.size() > i) {
-            i = search.lastPV.size();
-        }
-    }
 #ifdef wasm
-    printf("Depth: %d\n", i - 1);
-    int score = Evaluator::evaluate(board);
-    if (tt.contains(board.hashCode)) {
-        const TranspositionTable::Entry entry = tt.getEntry(board.hashCode, 0);
-        score = entry.score;
-    }
-    printf("Evaluation: %d\nPV: ", score);
-    for (const Move&move: search.lastPV) {
-        printf("%s%s ", Util::positionToString(move.start).c_str(), Util::positionToString(move.end).c_str());
-    }
-    const int occupancy = tt.occupancy();
-    printf("\nBoard hash: %llu", board.hashCode);
-    printf("\nTT reads: %d", tt.reads);
-    printf("\nTT writes: %d", tt.writes);
-    printf("\nTT collisions: %d", tt.collisions);
-    printf("\nTT occupancy: %d", occupancy);
-    printf("\n**************************\n");
-    search.logger.sendInt("updateDepth", i - 1);
-    search.logger.sendInt("updateTTOccupancy", tt.occupancy());
+        printf("Depth: %d\n", i - 1);
+        int score = Evaluator::evaluate(board);
+        if (tt.contains(board.hashCode)) {
+            const TranspositionTable::Entry entry = tt.getEntry(board.hashCode, 0);
+            score = entry.score;
+        }
+        printf("Evaluation: %d\nPV: ", score);
+        for (const Move&move: search.lastPV) {
+            printf("%s%s ", Util::positionToString(move.start).c_str(), Util::positionToString(move.end).c_str());
+        }
+        const int occupancy = tt.occupancy();
+        printf("\nBoard hash: %llu", board.hashCode);
+        printf("\nTT reads: %d", tt.reads);
+        printf("\nTT writes: %d", tt.writes);
+        printf("\nTT collisions: %d", tt.collisions);
+        printf("\nTT occupancy: %d", occupancy);
+        printf("\n**************************\n");
+        search.logger.sendInt("updateDepth", i - 1);
+        search.logger.sendInt("updateTTOccupancy", tt.occupancy());
 #endif
 
-    tt.resetCounters();
+        tt.resetCounters();
+    }
+    catch (std::exception &e) {
+        std::cout << "Exception while searching: " << e.what() << "| Will try to return PV[0]" << std::endl;
+    }
+
     search.lastPV = search.collectPV(i);
 
     if (search.lastPV.empty()) {
