@@ -3,6 +3,7 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
+#include <condition_variable>
 
 #include "ChessBoard.h"
 
@@ -43,7 +44,9 @@ namespace Interface {
 	private:
 		ChessBoard board;
 
-		bool ready = true;
+        std::mutex m;
+        std::condition_variable cv;
+        bool ready = true;
 
 		static Instruction interpret(const std::string&string);
 

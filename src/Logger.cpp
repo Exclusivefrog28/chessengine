@@ -19,6 +19,11 @@ void Logger::start() {
 }
 
 void Logger::end() {
+    {
+        std::lock_guard lk(m);
+        stop = true;
+    }
+    cv.notify_one();
     stop = true;
     processingThread.join();
 #ifdef logtofile
@@ -102,7 +107,6 @@ Logger::~Logger() {
 
 void Logger::threadFunc() {
     while (!stop) {
-        // Keep processing the buffer, wait a bit when it's empty
         if (!processNode()) {
             std::unique_lock lk(m);
             empty = true;

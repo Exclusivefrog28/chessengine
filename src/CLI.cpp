@@ -17,9 +17,8 @@ namespace Interface {
             std::getline(std::cin, input);
             currentInstruction = interpret(input);
 
-            while (!ready) {
-                std::this_thread::sleep_for(std::chrono::milliseconds(10));
-            }
+            std::unique_lock lk(m);
+            cv.wait(lk, [this] { return ready; });
             ready = false;
             std::thread thread(&CLI::handleInstruction, this, currentInstruction);
             thread.detach();
@@ -99,16 +98,19 @@ namespace Interface {
                 }
 
                 const Move bestMove = Search::search(board, timeOut);
+                board.makeMove(bestMove);
 
                 std::cout << "bestmove " << bestMove << std::endl;
-
-                board.makeMove(bestMove);
 
                 break;
             }
             default:
                 break;
         }
-        ready = true;
+        {
+            std::lock_guard lk(m);
+            ready = true;
+        }
+        cv.notify_one();
     }
 }
