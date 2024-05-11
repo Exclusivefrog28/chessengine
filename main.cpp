@@ -1,4 +1,3 @@
-#include <iostream>
 #include "ChessBoard.h"
 #include "Piece.h"
 #include "Move.h"
@@ -10,11 +9,14 @@
 #include <cstring>
 #include <string>
 
+#ifndef wasm
 #include "CLI.h"
+#endif
 
 #ifdef wasm
 #include <emscripten/em_macros.h>
 
+// The main board object for the web app.
 ChessBoard board;
 
 extern "C" {
@@ -166,7 +168,9 @@ int eval() {
 
 EMSCRIPTEN_KEEPALIVE
 char* getBestMove(const int milliseconds) {
-	const Move bestMove = Search::search(board, milliseconds);
+    Search search = Search(board);
+    search.doSearch();
+    const Move bestMove = search.endSearch(milliseconds);
 	std::string bestMoveJSON = R"({"start":")";
 	bestMoveJSON += Util::positionToString(bestMove.start);
 	bestMoveJSON += R"(","end":")";

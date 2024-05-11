@@ -11,64 +11,44 @@
 
 TranspositionTable Search::tt = TranspositionTable();
 
-Move Search::search(ChessBoard &board, const int timeAllowed) {
-    Search search = Search(board);
-    search.logger.start();
-    search.logger.logToFile("starting search\n");
+void Search::doSearch() {
+    searchingSemaphore.acquire();
 
-    const auto timeOut = std::chrono::milliseconds(timeAllowed);
-    const auto start = std::chrono::steady_clock::now();
+    logger.start();
+    logger.logToFile("starting search\n");
 
-    int i = 1;
-    {
-        std::thread thread(&Search::threadedSearch, &search, i);
-        thread.join();
-        search.lastPV = search.collectPV(i);
+    reachedDepthOneSemaphore.acquire();
+    std::thread thread(&Search::threadedSearch, this);
+    thread.detach();
+}
 
-        i = search.lastPV.size() + 1;
-    }
+Move Search::endSearch(int timeOut) {
+    if (timeOut == 0) {
+        reachedDepthOneSemaphore.acquire();
+        stop = true;
+        searchingSemaphore.acquire();
 
-    for (; i < 64; ++i) {
-        search.logger.log(std::format("info searching depth {}\n", i));
-        search.logger.logToFile(std::format("starting depth {}\n", i));
-
-        std::thread thread(&Search::threadedSearch, &search, i);
-
-        std::unique_lock<std::mutex> lk(search.cv_m);
-        search.stop = false;
-        search.finished = false;
-
-        const auto now = std::chrono::steady_clock::now();
-        if (now - start >= timeOut){
-            search.stop = true;
-            thread.join();
-            break;
+    } else {
+        if (!searchingSemaphore.try_acquire_for(std::chrono::milliseconds(timeOut))) {
+            reachedDepthOneSemaphore.acquire();
+            stop = true;
+            searchingSemaphore.acquire();
         }
-        const auto timeAvailable = start + timeOut -now;
-
-        if (search.cv.wait_for(lk, timeAvailable, [&] { return search.finished; })) {
-            thread.join();
-        } else {
-            search.stop = true;
-            thread.join();
-            break;
-        }
-
-        bool endEarly = false;
-
-        search.lastPV = search.collectPV(i, endEarly);
-
-        if (endEarly) break;
     }
+    reachedDepthOneSemaphore.release();
+    searchingSemaphore.release();
+
 #ifdef wasm
-    printf("Depth: %d\n", i - 1);
-    int score = Evaluator::evaluate(board);
+    printf("Depth: %zu\n", lastPV.size());
+    int score = 0;
     if (tt.contains(board.hashCode)) {
         const TranspositionTable::Entry entry = tt.getEntry(board.hashCode, 0);
         score = entry.score;
+    }else{
+        score = Evaluator::evaluate(board);
     }
     printf("Evaluation: %d\nPV: ", score);
-    for (const Move&move: search.lastPV) {
+    for (const Move&move: lastPV) {
         printf("%s%s ", Util::positionToString(move.start).c_str(), Util::positionToString(move.end).c_str());
     }
     const int occupancy = tt.occupancy();
@@ -78,15 +58,13 @@ Move Search::search(ChessBoard &board, const int timeAllowed) {
     printf("\nTT collisions: %d", tt.collisions);
     printf("\nTT occupancy: %d", occupancy);
     printf("\n**************************\n");
-    search.logger.sendInt("updateDepth", i - 1);
-    search.logger.sendInt("updateTTOccupancy", tt.occupancy());
+    logger.sendInt("updateDepth", lastPV.size());
+    logger.sendInt("updateTTOccupancy", tt.occupancy());
 #endif
-
     tt.resetCounters();
 
-    search.lastPV = search.collectPV(i);
-
-    if (search.lastPV.empty()) {
+    lastPV = collectPV(64);
+    if (lastPV.empty()) {
         auto entry = tt.getEntry(board.hashCode, 0);
         std::cout << "problem HASH: " << board.hashCode << " TT: key- " << entry.key << ", move- " << entry.bestMove
                   << ", type- " << entry.nodeType <<
@@ -94,25 +72,42 @@ Move Search::search(ChessBoard &board, const int timeAllowed) {
         return NULL_MOVE;
     }
 
-    search.logger.end();
-    std::cout << "Logger stopped" << std::endl;
+    logger.end();
 
-    return search.lastPV[0];
+    return lastPV[0];
 }
 
-void Search::threadedSearch(int depth) {
+void Search::threadedSearch() {
     constexpr int alpha = INT32_MIN + 1;
     constexpr int beta = INT32_MAX;
 
+    logger.log(std::format("info searching depth 1\n"));
+    logger.logToFile(std::format("starting depth 1\n"));
+
     logger.logToFile("root begin\n");
-    alphaBeta(depth, alpha, beta, 0);
+    alphaBeta(1, alpha, beta, 0);
     logger.logToFile("root end\n");
-    if (stop) return;
 
-    std::lock_guard<std::mutex> lk(cv_m);
-    finished = true;
+    bool endEarly = false;
 
-    cv.notify_one();
+    lastPV = collectPV(1, endEarly);
+    reachedDepthOneSemaphore.release();
+
+    int i = std::max((int) lastPV.size(), 2);
+
+    for (; i < 64 && !endEarly; ++i) {
+        logger.log(std::format("info searching depth {}\n", i));
+        logger.logToFile(std::format("starting depth {}\n", i));
+
+        logger.logToFile("root begin\n");
+        alphaBeta(i, alpha, beta, 0);
+        logger.logToFile("root end\n");
+        if (stop) break;
+
+        lastPV = collectPV(i, endEarly);
+        i = std::max((int) lastPV.size(), i);
+    }
+    searchingSemaphore.release();
 }
 
 int Search::alphaBeta(const int depth, int alpha, int beta, const int ply) {
@@ -452,4 +447,12 @@ bool Search::getTransposition(const uint64_t hash, const int depth, const int pl
     }
 
     return false;
+}
+
+void Search::reset() {
+    stop = false;
+    lastPV.clear();
+    killerMoves = std::array<std::array<Move, 2>, 64>();
+    killerMoveIndexOne = false;
+    history = std::array<std::array<std::array<int, 64>, 64>, 2>();
 }

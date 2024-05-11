@@ -17,9 +17,12 @@ namespace Interface {
             std::getline(std::cin, input);
             currentInstruction = interpret(input);
 
-            std::unique_lock lk(m);
-            cv.wait(lk, [this] { return ready; });
-            ready = false;
+            readySemaphore.acquire();
+
+            if (currentInstruction.command != ucinewgame && currentInstruction.command != position){
+                readySemaphore.release();
+            }
+
             std::thread thread(&CLI::handleInstruction, this, currentInstruction);
             thread.detach();
         }
@@ -47,14 +50,15 @@ namespace Interface {
                 std::cout << "id author " << "Exclusivefrog28" << std::endl;
                 std::cout << "uciok" << std::endl;
                 break;
-            case isready:
+            case isready: {
                 std::cout << "readyok" << std::endl;
+            }
                 break;
-            case ucinewgame:
-                ready = false;
+            case ucinewgame: {
                 Search::tt.clear();
                 board = ChessBoard();
-                ready = true;
+                readySemaphore.release();
+            }
                 break;
             case position: {
                 int startIndex = 1;
@@ -76,10 +80,11 @@ namespace Interface {
                         board.makeMove(parseMove(instr.args[i], board));
                     }
                 }
-                break;
+                readySemaphore.release();
             }
+                break;
             case go: {
-                int timeOut = 3000;
+                int timeOut = 0;
 
                 if (!instr.args.empty()) {
                     const std::string arg = instr.args[0];
@@ -97,20 +102,31 @@ namespace Interface {
                     }
                 }
 
-                const Move bestMove = Search::search(board, timeOut);
-                board.makeMove(bestMove);
+                searching = true;
+                search.reset();
+                search.doSearch();
 
-                std::cout << "bestmove " << bestMove << std::endl;
+                if (timeOut > 0) {
+                    Move bestMove = search.endSearch(timeOut);
+                    searching = false;
+                    board.makeMove(bestMove);
 
-                break;
+                    std::cout << "bestmove " << bestMove << std::endl;
+                }
             }
+                break;
+            case stop: {
+                if (searching) {
+                    Move bestMove = search.endSearch(0);
+                    searching = false;
+                    board.makeMove(bestMove);
+
+                    std::cout << "bestmove " << bestMove << std::endl;
+                }
+            }
+                break;
             default:
                 break;
         }
-        {
-            std::lock_guard lk(m);
-            ready = true;
-        }
-        cv.notify_one();
     }
 }

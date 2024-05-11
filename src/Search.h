@@ -25,7 +25,11 @@ public:
 
 	explicit Search(ChessBoard&board);
 
-	static Move search(ChessBoard&board, int timeAllowed);
+    void doSearch();
+
+    Move endSearch(int timeOut);
+
+    void reset();
 
 private:
 	std::array<std::array<Move, 2>, 64> killerMoves{};
@@ -33,14 +37,14 @@ private:
 	std::array<std::array<std::array<int, 64>, 64>, 2> history{};
 	std::vector<Move> lastPV;
 
-	std::condition_variable cv;
-	std::mutex cv_m;
-	bool finished = false;
-	std::atomic<bool> stop{false};
+	bool stop = false;
+
+    std::binary_semaphore searchingSemaphore{1};
+    std::binary_semaphore reachedDepthOneSemaphore{1};
 
 	Logger logger;
 
-	void threadedSearch(int depth);
+	void threadedSearch();
 
 	int alphaBeta(int depth, int alpha, int beta, int ply);
 

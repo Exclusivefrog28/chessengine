@@ -4,8 +4,10 @@
 #include <unordered_map>
 #include <vector>
 #include <condition_variable>
+#include <semaphore>
 
 #include "ChessBoard.h"
+#include "Search.h"
 
 //Universal Chess Interface implementation
 namespace Interface {
@@ -39,18 +41,19 @@ namespace Interface {
 
 	class CLI {
 	public:
-		void start();
+        void start();
 
 	private:
 		ChessBoard board;
 
-        std::mutex m;
-        std::condition_variable cv;
-        bool ready = true;
+        std::binary_semaphore readySemaphore{1};
 
 		static Instruction interpret(const std::string&string);
 
 		void handleInstruction(const Instruction&instr);
+
+        Search search = Search(board);
+        bool searching = false;
 	};
 }
 
