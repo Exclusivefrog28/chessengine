@@ -50,7 +50,10 @@ void TranspositionTable::setEntry(const ChessBoard &board, const Move bestMove, 
         if ((savedType != EXACT && nodeType != EXACT) || (savedType == EXACT && nodeType == EXACT)) {
             if (entries[index].depth <= depth) write(index, entry);
         } else if (savedType != EXACT) write(index, entry);
-    } else write(index, entry);
+    } else {
+        entryCount++;
+        write(index, entry);
+    }
 }
 
 void TranspositionTable::write(const int index, const Entry &entry) {
@@ -64,16 +67,9 @@ void TranspositionTable::resetCounters() {
     collisions = 0;
 }
 
-int TranspositionTable::occupancy() const {
-    int occupied = 0;
-    for (int i = 0; i < TT_SIZE; i++) {
-        if (entries[i].nodeType != FREE) occupied++;
-    }
-    return occupied;
-}
-
 void TranspositionTable::clear() {
     resetCounters();
+    entryCount = 0;
     for (Entry &entry: entries) {
         entry.nodeType = FREE;
     }

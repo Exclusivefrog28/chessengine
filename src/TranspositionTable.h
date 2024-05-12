@@ -35,19 +35,18 @@ public:
 
     static bool isMateScore(int32_t score) ;
 
-    int reads;
-    int writes;
-    int collisions;
+    int reads = 0;
+    int writes = 0;
+    int collisions = 0;
+    int entryCount = 0;
 
     void resetCounters();
-
-    int occupancy() const;
 
     void clear();
 
     void loadOpenings(ChessBoard &board);
 
-    std::array<Entry, TT_SIZE> entries;
+    std::array<Entry, TT_SIZE> entries{};
 
 private:
     void write(int index, const Entry &entry);

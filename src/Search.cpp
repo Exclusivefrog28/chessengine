@@ -40,30 +40,26 @@ Move Search::endSearch(int timeOut) {
 
 #ifdef wasm
     printf("Depth: %zu\n", lastPV.size());
-    int score = 0;
+    int score;
     if (tt.contains(board.hashCode)) {
         const TranspositionTable::Entry entry = tt.getEntry(board.hashCode, 0);
         score = entry.score;
-    }else{
+    } else {
         score = Evaluator::evaluate(board);
     }
     printf("Evaluation: %d\nPV: ", score);
-    for (const Move&move: lastPV) {
-        printf("%s%s ", Util::positionToString(move.start).c_str(), Util::positionToString(move.end).c_str());
-    }
-    const int occupancy = tt.occupancy();
     printf("\nBoard hash: %llu", board.hashCode);
     printf("\nTT reads: %d", tt.reads);
     printf("\nTT writes: %d", tt.writes);
     printf("\nTT collisions: %d", tt.collisions);
-    printf("\nTT occupancy: %d", occupancy);
+    printf("\nTT occupancy: %d", tt.entryCount);
     printf("\n**************************\n");
-    logger.sendInt("updateDepth", lastPV.size());
-    logger.sendInt("updateTTOccupancy", tt.occupancy());
+    logger.sendInt("updateTTOccupancy", tt.entryCount);
+    logger.sendInt("updateEvaluation", score);
 #endif
     tt.resetCounters();
 
-    lastPV = collectPV(64);
+    lastPV = collectPV(lastPV.size() + 1);
     if (lastPV.empty()) {
         auto entry = tt.getEntry(board.hashCode, 0);
         std::cout << "problem HASH: " << board.hashCode << " TT: key- " << entry.key << ", move- " << entry.bestMove
@@ -81,7 +77,7 @@ void Search::threadedSearch() {
     constexpr int alpha = INT32_MIN + 1;
     constexpr int beta = INT32_MAX;
 
-    logger.log(std::format("info searching depth 1\n"));
+    logger.log(std::format("info depth 1\n"));
     logger.logToFile(std::format("starting depth 1\n"));
 
     logger.logToFile("root begin\n");
@@ -96,7 +92,7 @@ void Search::threadedSearch() {
     int i = std::max((int) lastPV.size(), 2);
 
     for (; i < 64 && !endEarly; ++i) {
-        logger.log(std::format("info searching depth {}\n", i));
+        logger.log(std::format("info depth {}\n", i));
         logger.logToFile(std::format("starting depth {}\n", i));
 
         logger.logToFile("root begin\n");
@@ -105,6 +101,15 @@ void Search::threadedSearch() {
         if (stop) break;
 
         lastPV = collectPV(i, endEarly);
+
+        if (tt.contains(board.hashCode)) {
+            const TranspositionTable::Entry entry = tt.getEntry(board.hashCode, 0);
+            logger.sendInt("updateEvaluation", entry.score);
+        }
+        logger.sendInt("updateDepth", i);
+        logger.sendInt("updateTTOccupancy", tt.entryCount);
+
+
         i = std::max((int) lastPV.size(), i);
     }
     searchingSemaphore.release();
@@ -391,13 +396,10 @@ std::vector<Move> Search::collectPV(const int depth, bool &endEarly) const {
         }
     }
     std::string pvString;
-    std::string pvStringWithScores = "info PV: ";
-    for (int i = 0; i < pv.size(); ++i) {
-        pvString += pv[i].toString() + " ";
-        pvStringWithScores += std::format("[{} - {}] ", pv[i].toString(), scores[i]);
+    for (auto move: pv) {
+        pvString += move.toString() + " ";
     }
-    pvStringWithScores += "\n";
-    logger.log(pvStringWithScores);
+    logger.log("info PV " + pvString + "\n");
     logger.sendString("updatePV", pvString);
 
     for (; pvDepth > 0; --pvDepth) {
