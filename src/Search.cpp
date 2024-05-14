@@ -232,7 +232,6 @@ int Search::quiesce(int alpha, int beta, const int ply, const int depth) {
     for (int i = 0; i < moves.size(); i++) {
         Move move = selectMove(moves, i);
 
-
         board.makeMove(move);
         if (MoveGenerator::inCheck(board, invertColor(board.sideToMove))) {
             board.unMakeMove();
